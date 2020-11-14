@@ -1,0 +1,49 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28803.202
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TeamspeakToolMvvm.Logic", "TeamspeakToolMvvm.Logic\TeamspeakToolMvvm.Logic.csproj", "{B540BB59-7EF4-4E8F-9E21-BA2B77275A76}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TeamspeakToolMvvm.Wpf", "TeamspeakToolMvvm.Wpf\TeamspeakToolMvvm.Wpf.csproj", "{FE635B1E-6D37-48FD-A74A-3BABD1382D33}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AdvancedSettings.Logic", "..\AdvancedSettings\AdvancedSettings.Logic\AdvancedSettings.Logic.csproj", "{131F4D8F-91D6-4142-9CBE-526BD24969CD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AdvancedSettings.Wpf", "..\AdvancedSettings\AdvancedSettings.Wpf\AdvancedSettings.Wpf.csproj", "{361ABA0D-02CF-4884-9DC2-253E25F2F825}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TeamspeakClient", "..\TeamspeakClient\TeamspeakClient\TeamspeakClient.csproj", "{98790057-368C-4DF1-AAEC-0A429D99BFE6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B540BB59-7EF4-4E8F-9E21-BA2B77275A76}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B540BB59-7EF4-4E8F-9E21-BA2B77275A76}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B540BB59-7EF4-4E8F-9E21-BA2B77275A76}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B540BB59-7EF4-4E8F-9E21-BA2B77275A76}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FE635B1E-6D37-48FD-A74A-3BABD1382D33}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FE635B1E-6D37-48FD-A74A-3BABD1382D33}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FE635B1E-6D37-48FD-A74A-3BABD1382D33}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FE635B1E-6D37-48FD-A74A-3BABD1382D33}.Release|Any CPU.Build.0 = Release|Any CPU
+		{131F4D8F-91D6-4142-9CBE-526BD24969CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{131F4D8F-91D6-4142-9CBE-526BD24969CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{131F4D8F-91D6-4142-9CBE-526BD24969CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{131F4D8F-91D6-4142-9CBE-526BD24969CD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{361ABA0D-02CF-4884-9DC2-253E25F2F825}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{361ABA0D-02CF-4884-9DC2-253E25F2F825}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{361ABA0D-02CF-4884-9DC2-253E25F2F825}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{361ABA0D-02CF-4884-9DC2-253E25F2F825}.Release|Any CPU.Build.0 = Release|Any CPU
+		{98790057-368C-4DF1-AAEC-0A429D99BFE6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{98790057-368C-4DF1-AAEC-0A429D99BFE6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{98790057-368C-4DF1-AAEC-0A429D99BFE6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{98790057-368C-4DF1-AAEC-0A429D99BFE6}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {BAA72DB7-78B8-409F-B175-5C5624E7B0F9}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,40 @@
+<Application x:Class="TeamspeakToolMvvm.Wpf.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:TeamspeakToolMvvm.Wpf"
+             StartupUri="MainWindow.xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:d1p1="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             d1p1:Ignorable="d"
+             xmlns:vm="clr-namespace:TeamspeakToolMvvm.Logic;assembly=TeamspeakToolMvvm.Logic"
+             xmlns:ui="clr-namespace:TeamspeakToolMvvm.Wpf"
+             xmlns:baseConverters="clr-namespace:AdvancedSettings.Wpf.Converters;assembly=AdvancedSettings.Wpf">
+    <Application.Resources>
+    <ResourceDictionary>
+            <vm:ViewModelLocator x:Key="Locator" d:IsDataSource="True"  />
+            <ui:MessageListener x:Key="MessageListener" />
+
+            <!-- Converters -->
+            <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+            <baseConverters:MarginConverter x:Key="MarginConverter" />
+            <baseConverters:DateTimeToStringConverter x:Key="DateTimeToStringConverter" />
+            <baseConverters:StringEmptyToVisibilityConverter x:Key="StringEmptyToVisibilityConverter" />
+            <baseConverters:StringIconEmptyToVisibilityMultiConverter x:Key="StringIconEmptyToVisibilityMultiConverter" />
+            <baseConverters:NegateBooleanToVisibilityConverter x:Key="NegateBooleanToVisibilityConverter" />
+            <baseConverters:NegateBooleanToBooleanConverter x:Key="NegateBooleanToBooleanConverter" />
+            <baseConverters:RemoveNewLineConverter x:Key="RemoveNewLineConverter" />
+            <baseConverters:BooleanToBrushConverter x:Key="BooleanToBrushConverter" />
+            <baseConverters:StringToFontFamilyConverter x:Key="StringToFontFamilyConverter" />
+            <baseConverters:BooleanToWindowStateConverter x:Key="BooleanToWindowStateConverter" />
+            <baseConverters:StringToIconConverter x:Key="StringToIconConverter" />
+
+            <!-- Brushes -->
+            <SolidColorBrush x:Key="DarkForeground" Color="#FF0A0A0A" />
+            <SolidColorBrush x:Key="LightForeground" Color="#FFBDBDBD" />
+            <SolidColorBrush x:Key="LighterForeground" Color="#FFE2E2E2" />
+            <SolidColorBrush x:Key="IsDanger" Color="#FFDA3E3E" />
+            <SolidColorBrush x:Key="IsWarning" Color="#FFFFF69E" />
+            <SolidColorBrush x:Key="IsSuccess" Color="#FF3EAA63" />
+        </ResourceDictionary>
+  </Application.Resources>
+</Application>

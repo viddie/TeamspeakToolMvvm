@@ -1,0 +1,70 @@
+﻿<Window x:Class="TeamspeakToolMvvm.Wpf.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:TeamspeakToolMvvm.Wpf"
+        xmlns:controls="clr-namespace:AdvancedSettings.Wpf.UserControls;assembly=AdvancedSettings.Wpf"
+        mc:Ignorable="d"
+        IsEnabled="{Binding BindableProperty, Source={StaticResource MessageListener}}"
+        DataContext="{Binding Main, Source={StaticResource Locator}}"
+        
+        Title="{Binding Title}"
+        Height="432.896"
+        Width="750.104"
+        Left="{Binding Path=Settings.WindowLeft, Mode=TwoWay}"
+        Top="{Binding Path=Settings.WindowTop, Mode=TwoWay}"
+        WindowState="{Binding Path=Settings.WindowIsMaximized, Converter={StaticResource BooleanToWindowStateConverter}, Mode=TwoWay}" Closing="Window_Closing">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="33" />
+            <RowDefinition Height="50" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <Grid Grid.Row="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="170" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="170" />
+            </Grid.ColumnDefinitions>
+
+            <controls:IconLabel Grid.Column="0" Icon="Circle" Foreground="{Binding IsConnected, Converter={StaticResource BooleanToBrushConverter}}" Height="25" VerticalContentAlignment="Center" HorizontalAlignment="Left" Margin="10,0,0,0"/>
+            <controls:IconButton Grid.Column="0" Text="{Binding ConnectButtonText}" Height="25" Command="{Binding ConnectCommand}" Margin="35,0,0,0"/>
+            <controls:IconLabel Grid.Column="1" Text="Teamspeak Tool" HorizontalContentAlignment="Center" FontSize="19" FontWeight="Bold" Icon="None" />
+            <controls:IconButton Grid.Column="2" Text="Open Settings" Icon="Cog" Height="25" Command="{Binding OpenSettingsCommand}"/>
+        </Grid>
+
+
+        <Grid Grid.Row="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="230" />
+            </Grid.ColumnDefinitions>
+
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="30" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <controls:IconLabel Grid.Row="0" Text="Actions" Icon="Flash" HorizontalContentAlignment="Center" />
+                <ItemsControl Grid.Row="1" ItemsSource="{Binding Commands}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <controls:IconButton Text="{Binding DisplayName}" Icon="{Binding IconName, Converter={StaticResource StringToIconConverter}}" Height="25" Margin="10,10,10,0" Command="{Binding Command}" CommandParameter="asd" VerticalAlignment="Top" HorizontalAlignment="Stretch"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>
