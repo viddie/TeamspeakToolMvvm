@@ -14,6 +14,8 @@ using System.Threading;
 using TeamspeakToolMvvm.Logic.Messages;
 using TeamspeakToolMvvm.Logic.Models;
 using TSClient.Models;
+using TSClient.Events;
+using TSClient.Enums;
 
 namespace TeamspeakToolMvvm.Logic.ViewModels {
     public class MainViewModel : ViewModelBase {
@@ -21,6 +23,7 @@ namespace TeamspeakToolMvvm.Logic.ViewModels {
         #region Properties
         public MySettings Settings { get; set; }
         public TeamspeakClient Client { get; set; }
+        public int KeepAliveSeconds { get; set; } = 300;
         #endregion
 
         #region View Properties
@@ -29,7 +32,13 @@ namespace TeamspeakToolMvvm.Logic.ViewModels {
 
         public string ConnectButtonText { get; set; } = "Connect";
 
-        public List<CommandModel> Commands { get; set; }
+
+        public bool HasSelectedClient { get; set; } = true;
+        public bool HasSelectedChannel { get; set; } = false;
+
+        public List<CommandModel> GlobalCommands { get; set; }
+        public List<CommandModel> ClientCommands { get; set; }
+        public List<CommandModel> ChannelCommands { get; set; }
         #endregion
 
         #region Commands
@@ -39,8 +48,8 @@ namespace TeamspeakToolMvvm.Logic.ViewModels {
         #endregion
 
         #region Teamspeak Properties
-        private int MyClientId { get; set; } = -1;
-        private int MyChannelId { get; set; } = -1;
+        public int MyClientId { get; set; } = -1;
+        public int MyChannelId { get; set; } = -1;
         #endregion
 
         public MainViewModel() {
@@ -57,13 +66,16 @@ namespace TeamspeakToolMvvm.Logic.ViewModels {
             Settings.SaveTimerDelay = 1000;
             #endregion
 
+            //Auto connect if API key is set
             if (Settings.ClientAuthKey != "<your-api-key-here>") {
                 HandleConnectCommand();
             }
 
-            Commands = new List<CommandModel>() {
+            //Initialize Commands
+            GlobalCommands = new List<CommandModel>() {
                 new CommandModel() { DisplayName = "Mass-Poke My Channel", Command = new RelayCommand(MassPokeInMyChannel), IconName = "HandOutlineUp" },
                 new CommandModel() { DisplayName = "Open chat with yourself", Command = new RelayCommand(OpenChatWithMyself), IconName = "Commenting" },
+                new CommandModel() { DisplayName = "Toggle no-move", Command = new RelayCommand(ToggleNoMove), IconName = "Ban" },
             };
 
             RegisterMessages();
@@ -90,6 +102,7 @@ namespace TeamspeakToolMvvm.Logic.ViewModels {
                 await Task.Run(() => {
                     Client.ConnectClient();
                     Client.AuthorizeClient(authKey);
+                    AfterConnectionInit();
                 });
                 IsConnected = true;
                 ConnectButtonText = "Connected!";
@@ -101,6 +114,19 @@ namespace TeamspeakToolMvvm.Logic.ViewModels {
                 IsConnected = false;
                 ConnectButtonText = "Error";
             }
+        }
+
+        public void AfterConnectionInit() {
+            //Initialize KeepAlive timer
+            Timer t = new Timer(new TimerCallback((o) => {
+                Client.SendCommand("whoami");
+            }), null, 1000 * KeepAliveSeconds, 1000 * KeepAliveSeconds);
+
+
+            Client.GetClientList(false);
+
+            //Register No-Move
+            Client.RegisterEventCallback(typeof(NotifyClientMovedEvent), OnClientMoved);
         }
         #endregion
 
@@ -117,7 +143,7 @@ namespace TeamspeakToolMvvm.Logic.ViewModels {
 
         #region TS3 Actions
         public void MassPokeInMyChannel() {
-            (int myId, int myChannelId) = Client.GetWhoAmI();
+            int myChannelId = GetMyChannelId();
 
             List<Client> clients = Client.GetClientsInChannel(myChannelId);
             foreach (Client client in clients) {
@@ -126,11 +152,73 @@ namespace TeamspeakToolMvvm.Logic.ViewModels {
         }
 
         public void OpenChatWithMyself() {
-            (int myId, int myChannelId) = Client.GetWhoAmI();
+            int myId = GetMyClientId();
             Client.SendCommand($"sendtextmessage targetmode=1 target={myId} msg=Hola");
         }
 
-        
+        public void ToggleNoMove() {
+            Settings.NoMoveEnabled = !Settings.NoMoveEnabled;
+        }
+
+        public void OnNoMoveEvent(NotifyClientMovedEvent evt) {
+            if (!Settings.NoMoveEnabled) return;
+            if (evt.Reason == ClientMoveReason.SelfMove || evt.ClientId == evt.InvokerId) return; //Ignore channel switching
+
+            int myId = GetMyClientId();
+            if (myId == evt.ClientId) {
+                Client me = GetClientById(myId);
+                Client.SendCommand($"clientmove cid={me.ChannelId} clid={myId}");
+                return;
+            }
+
+
+            string otherExcludeName = Settings.NoMoveUsername;
+            Client otherClient = GetClientById(evt.ClientId);
+            if (otherExcludeName == otherClient.Nickname) {
+                Client.SendCommand($"clientmove cid={otherClient.ChannelId} clid={otherClient.Id}");
+                return;
+            }
+        }
+        #endregion
+
+
+        #region TS3 Calls
+        public int GetMyClientId() {
+            if (MyClientId == -1) {
+                (MyClientId, MyChannelId) = Client.GetWhoAmI();
+            }
+
+            return MyClientId;
+        }
+
+        public int GetMyChannelId() {
+            (MyClientId, MyChannelId) = Client.GetWhoAmI();
+            return MyChannelId;
+        }
+
+        public Client GetClientById(int id) {
+            List<Client> clients = Client.GetClientList();
+
+            foreach (Client client in clients) {
+                if (client.Id == id) {
+                    return client;
+                }
+            }
+
+            return null;
+        }
+        #endregion
+
+
+        #region TS3 Events
+        public void OnClientMoved(Event e) {
+            NotifyClientMovedEvent evt = (NotifyClientMovedEvent)e;
+
+            OnNoMoveEvent(evt);
+
+            Client.GetClientList(false);
+            //Client.SendCommand("clientlist");
+        }
         #endregion
     }
 }

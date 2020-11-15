@@ -26,9 +26,15 @@ namespace TeamspeakToolMvvm.Logic.Config
         public bool WindowIsMaximized { get; set; } = false;
         #endregion
 
+        #region TS Client Query Connection
         public string ClientAuthKey { get; set; } = "<your-api-key-here>";
         public string ClientHost { get; set; } = "localhost";
         public int ClientPort { get; set; } = 25639;
+        #endregion
 
+        #region Other Properties
+        public bool NoMoveEnabled { get; set; } = false;
+        public string NoMoveUsername { get; set; } = "";
+        #endregion
     }
 }

@@ -10,8 +10,8 @@
         DataContext="{Binding Main, Source={StaticResource Locator}}"
         
         Title="{Binding Title}"
-        Height="432.896"
-        Width="750.104"
+        Height="536.958"
+        Width="998.464"
         Left="{Binding Path=Settings.WindowLeft, Mode=TwoWay}"
         Top="{Binding Path=Settings.WindowTop, Mode=TwoWay}"
         WindowState="{Binding Path=Settings.WindowIsMaximized, Converter={StaticResource BooleanToWindowStateConverter}, Mode=TwoWay}" Closing="Window_Closing">
@@ -41,6 +41,26 @@
             <controls:IconButton Grid.Column="2" Text="Open Settings" Icon="Cog" Height="25" Command="{Binding OpenSettingsCommand}"/>
         </Grid>
 
+        <Grid Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="100" />
+                <ColumnDefinition Width="60" />
+                <ColumnDefinition Width="100" />
+                <ColumnDefinition Width="60" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Label Grid.Row="0" Grid.Column="0" Content="My Client ID:" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" />
+            <Label Grid.Row="0" Grid.Column="1" Content="{Binding MyClientId}" HorizontalContentAlignment="Left" VerticalContentAlignment="Center" />
+            <Label Grid.Row="1" Grid.Column="0" Content="My Channel ID:" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" />
+            <Label Grid.Row="1" Grid.Column="1" Content="{Binding MyChannelId}" HorizontalContentAlignment="Left" VerticalContentAlignment="Center" />
+            <Label Grid.Row="0" Grid.Column="2" Content="No-Move Enabled:" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" />
+            <controls:IconLabel Grid.Row="0" Grid.Column="3" Icon="{Binding Settings.NoMoveEnabled, Converter={StaticResource BooleanToIconConverter}}" HorizontalContentAlignment="Left" VerticalContentAlignment="Center" />
+        </Grid>
 
         <Grid Grid.Row="2">
             <Grid.RowDefinitions>
@@ -49,15 +69,17 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="230" />
+                <ColumnDefinition Width="230" />
             </Grid.ColumnDefinitions>
 
-            <Grid Grid.Column="1">
+
+            <Grid Grid.Column="1" Visibility="{Binding HasSelectedClient, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="30" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
-                <controls:IconLabel Grid.Row="0" Text="Actions" Icon="Flash" HorizontalContentAlignment="Center" />
-                <ItemsControl Grid.Row="1" ItemsSource="{Binding Commands}">
+                <controls:IconLabel Grid.Row="0" Text="Client Actions" HorizontalContentAlignment="Center" />
+                <ItemsControl Grid.Row="1" ItemsSource="{Binding ClientCommands}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <controls:IconButton Text="{Binding DisplayName}" Icon="{Binding IconName, Converter={StaticResource StringToIconConverter}}" Height="25" Margin="10,10,10,0" Command="{Binding Command}" CommandParameter="asd" VerticalAlignment="Top" HorizontalAlignment="Stretch"/>
@@ -65,6 +87,37 @@
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
             </Grid>
+            <Grid Grid.Column="1" Visibility="{Binding HasSelectedChannel, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="30" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <controls:IconLabel Grid.Row="0" Text="Channel Actions" HorizontalContentAlignment="Center" />
+                <ItemsControl Grid.Row="1" ItemsSource="{Binding ChannelCommands}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <controls:IconButton Text="{Binding DisplayName}" Icon="{Binding IconName, Converter={StaticResource StringToIconConverter}}" Height="25" Margin="10,10,10,0" Command="{Binding Command}" CommandParameter="asd" VerticalAlignment="Top" HorizontalAlignment="Stretch"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Grid>
+            <Border Grid.Column="1" BorderBrush="LightGray" BorderThickness="1,1,0,1" />
+            
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="30" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <controls:IconLabel Grid.Row="0" Text="Global Actions" HorizontalContentAlignment="Center" />
+                <ItemsControl Grid.Row="1" ItemsSource="{Binding GlobalCommands}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <controls:IconButton Text="{Binding DisplayName}" Icon="{Binding IconName, Converter={StaticResource StringToIconConverter}}" Height="25" Margin="10,10,10,0" Command="{Binding Command}" CommandParameter="asd" VerticalAlignment="Top" HorizontalAlignment="Stretch"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Grid>
+            <Border Grid.Column="2" BorderBrush="LightGray" BorderThickness="1" />
         </Grid>
     </Grid>
 </Window>

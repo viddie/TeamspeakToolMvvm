@@ -25,8 +25,9 @@
             <baseConverters:RemoveNewLineConverter x:Key="RemoveNewLineConverter" />
             <baseConverters:BooleanToBrushConverter x:Key="BooleanToBrushConverter" />
             <baseConverters:StringToFontFamilyConverter x:Key="StringToFontFamilyConverter" />
-            <baseConverters:BooleanToWindowStateConverter x:Key="BooleanToWindowStateConverter" />
+            <baseConverters:BooleanToWindowStateConverter x:Key="BooleanToWindowStateConverter" /> 
             <baseConverters:StringToIconConverter x:Key="StringToIconConverter" />
+            <baseConverters:BooleanToIconConverter x:Key="BooleanToIconConverter" />
 
             <!-- Brushes -->
             <SolidColorBrush x:Key="DarkForeground" Color="#FF0A0A0A" />

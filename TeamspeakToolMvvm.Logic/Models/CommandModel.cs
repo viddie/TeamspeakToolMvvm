@@ -12,5 +12,6 @@ namespace TeamspeakToolMvvm.Logic.Models {
         public string DisplayName { get; set; }
         public string IconName { get; set; } = "None";
         public RelayCommand Command { get; set; }
+        public bool IsActive { get; set; }
     }
 }
