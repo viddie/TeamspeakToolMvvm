@@ -18,7 +18,7 @@ namespace TeamspeakToolMvvm.Logic.Groups {
 
         };
         public override Dictionary<string, bool> SubCommandAccesses { get; set; } = new Dictionary<string, bool>() {
-
+            ["command:groups_list"] = true,
         };
     }
 }

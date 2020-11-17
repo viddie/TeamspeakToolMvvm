@@ -7,18 +7,17 @@ using TeamspeakToolMvvm.Logic.Groups;
 using TSClient.Events;
 
 namespace TeamspeakToolMvvm.Logic.ChatCommands {
-    public class TimeCommand : ChatCommand {
-        public override string CommandPrefix { get; set; } = "time";
-        public override List<string> CommandAliases { get; set; } = new List<string>() {
-            "now",
-        };
+    public class SayCommand : ChatCommand {
+        public override string CommandPrefix { get; set; } = "say";
+        public override List<string> CommandAliases { get; set; } = new List<string>() { };
+
 
         public override bool IsValidCommandSyntax(string command, List<string> parameters) {
-            return true;
+            return parameters.Count > 0;
         }
 
         public override string GetUsageHelp(string command, List<string> parameters) {
-            return "time";
+            return $"{command} <something...>";
         }
 
         public override bool CanExecuteSubCommand(string uniqueId, string command, List<string> parameters) {
@@ -26,8 +25,8 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
         }
 
         public override void HandleCommand(NotifyTextMessageEvent evt, string command, List<string> parameters, Action<string> messageCallback) {
-            string time = DateTime.Now.ToString();
-            messageCallback.Invoke($"The current time is: {time}");
+            string toSay = string.Join(" ", parameters);
+            messageCallback.Invoke($"[Bot]: {toSay}");
         }
     }
 }

@@ -56,6 +56,7 @@ namespace TeamspeakToolMvvm.Logic.ViewModels {
         #endregion
 
         #region Teamspeak Properties
+        public int MySchandlerId { get; set; } = -1;
         public int MyClientId { get; set; } = -1;
         public int MyChannelId { get; set; } = -1;
         #endregion
@@ -108,6 +109,8 @@ namespace TeamspeakToolMvvm.Logic.ViewModels {
 
         public async void HandleConnectCommand() {
             string authKey = Settings.ClientAuthKey;
+
+            if (Client != null) Client.CloseClient();
 
             Client = new TeamspeakClient(Settings.ClientHost, Settings.ClientPort);
             try {

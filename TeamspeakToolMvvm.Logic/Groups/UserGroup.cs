@@ -17,6 +17,8 @@ namespace TeamspeakToolMvvm.Logic.Groups {
             [typeof(YouTubeCommand)] = true,
             [typeof(TimeCommand)] = true,
             [typeof(CoinFlipCommand)] = true,
+            [typeof(RollCommand)] = true,
+            [typeof(SayCommand)] = true,
         };
         public override Dictionary<string, bool> SubCommandAccesses { get; set; } = new Dictionary<string, bool>() {
 

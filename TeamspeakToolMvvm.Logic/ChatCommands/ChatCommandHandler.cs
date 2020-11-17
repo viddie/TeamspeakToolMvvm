@@ -23,6 +23,9 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
             new YouTubeCommand(),
             new CoinFlipCommand(),
             new GroupsCommand(),
+            new RollCommand(),
+            new SayCommand(),
+            new TeamsCommand(),
         };
 
 
@@ -74,6 +77,9 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
             } catch (NoPermissionException) {
                 sendMessageCallback.Invoke(ColorCoder.Error($"You don't have access to this command, {ColorCoder.Username(evt.InvokerName)}"));
                 return;
+            } catch (CommandParameterInvalidFormatException ex) {
+                sendMessageCallback.Invoke(ColorCoder.Error($"The {ex.GetParameterPosition()} parameter's format was invalid ({ex.ParameterName} = '{ex.ParameterValue}'). It has to be {ColorCoder.Bold(ex.GetNeededType())}!\nUsage: {Settings.ChatCommandPrefix}{ex.UsageHelp}"));
+                return;
             }
 
             try {
@@ -91,17 +97,22 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
         public ChatCommand GetCommandForMessage(string command, List<string> parameters, string uniqueId) { //command param1 param2 param3
             foreach (ChatCommand cmd in ChatCommands) {
                 if (cmd.CommandPrefix == command || cmd.CommandAliases.Contains(command)) {
-                    if (cmd.IsValidCommandSyntax(command, parameters)) {
-                        if (!AccessManager.UserHasAccessToCommand(uniqueId, cmd.GetType())) {
-                            throw new NoPermissionException();
-                        }
+                    ChatCommand chatCommand = (ChatCommand)Activator.CreateInstance(cmd.GetType());
+                    chatCommand.Parent = Parent;
+                    chatCommand.Settings = Settings;
 
-                        ChatCommand chatCommand = (ChatCommand)Activator.CreateInstance(cmd.GetType());
-                        chatCommand.Parent = Parent;
-                        chatCommand.Settings = Settings;
-                        return chatCommand;
-                    } else {
-                        throw new ChatCommandInvalidSyntaxException(cmd.GetUsageHelp(command, parameters));
+                    try {
+                        if (chatCommand.IsValidCommandSyntax(command, parameters)) {
+                            if (!chatCommand.CanExecute(uniqueId, command, parameters)) {
+                                throw new NoPermissionException();
+                            }
+                            return chatCommand;
+                        } else {
+                            throw new ChatCommandInvalidSyntaxException(chatCommand.GetUsageHelp(command, parameters));
+                        }
+                    } catch (CommandParameterInvalidFormatException ex) {
+                        ex.UsageHelp = chatCommand.GetUsageHelp(command, parameters);
+                        throw ex;
                     }
                 }
             }

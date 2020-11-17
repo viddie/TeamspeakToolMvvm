@@ -16,11 +16,13 @@ namespace TeamspeakToolMvvm.Logic.Groups {
         public static Group UserGroup = DefaultGroup;
         public static Group ModeratorGroup = new ModeratorGroup() { InheritGroup = UserGroup };
         public static Group AdminGroup = new AdminGroup();
+        public static Group BannedGroup = new BannedGroup();
 
         public static List<Group> AllGroups { get; set; } = new List<Group>() {
             AdminGroup,
             ModeratorGroup,
             UserGroup,
+            BannedGroup,
         };
 
         public MainViewModel Parent { get; set; }
@@ -67,26 +69,38 @@ namespace TeamspeakToolMvvm.Logic.Groups {
             Instance.Settings.DelayedSave();
         }
 
-        public static bool AddGroupByName(string uniqueId, string groupName) {
+        public static bool AddUserGroupByName(string uniqueId, string groupName) {
             Group group = GetGroupByName(groupName);
             if (group == null) {
                 throw new GroupNotFoundException($"Group '{groupName}' was not found");
             }
 
+            return AddUserGroup(uniqueId, group);
+        }
+        public static bool AddUserGroup(string uniqueId, Group group) {
             if (UserHasGroup(uniqueId, group)) {
                 return false;
             }
 
             Instance.Settings.UserGroups[uniqueId].Add(group.Name);
+
+            if (UserHasGroup(uniqueId, DefaultGroup)){
+                RemoveUserGroup(uniqueId, DefaultGroup);
+            }
+
             Instance.Settings.DelayedSave();
             return true;
         }
-        public static bool RemoveGroupByName(string uniqueId, string groupName) {
+
+        public static bool RemoveUserGroupByName(string uniqueId, string groupName) {
             Group group = GetGroupByName(groupName);
             if (group == null) {
                 throw new GroupNotFoundException($"Group '{groupName}' was not found");
             }
 
+            return RemoveUserGroup(uniqueId, group);
+        }
+        public static bool RemoveUserGroup(string uniqueId, Group group) {
             if (!UserHasGroup(uniqueId, group)) {
                 return false;
             }
