@@ -49,6 +49,8 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="100" />
                 <ColumnDefinition Width="60" />
+                <ColumnDefinition Width="110" />
+                <ColumnDefinition Width="30" />
                 <ColumnDefinition Width="100" />
                 <ColumnDefinition Width="60" />
                 <ColumnDefinition Width="*" />
@@ -56,10 +58,18 @@
 
             <Label Grid.Row="0" Grid.Column="0" Content="My Client ID:" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" />
             <Label Grid.Row="0" Grid.Column="1" Content="{Binding MyClientId}" HorizontalContentAlignment="Left" VerticalContentAlignment="Center" />
+            
             <Label Grid.Row="1" Grid.Column="0" Content="My Channel ID:" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" />
             <Label Grid.Row="1" Grid.Column="1" Content="{Binding MyChannelId}" HorizontalContentAlignment="Left" VerticalContentAlignment="Center" />
+            
             <Label Grid.Row="0" Grid.Column="2" Content="No-Move Enabled:" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" />
-            <controls:IconLabel Grid.Row="0" Grid.Column="3" Icon="{Binding Settings.NoMoveEnabled, Converter={StaticResource BooleanToIconConverter}}" HorizontalContentAlignment="Left" VerticalContentAlignment="Center" />
+            <controls:IconLabel Grid.Row="0" Grid.Column="3" Icon="{Binding Settings.NoMoveEnabled, Converter={StaticResource BooleanToIconConverter}}" Margin="5,0,0,0" HorizontalContentAlignment="Left" VerticalContentAlignment="Center" />
+
+            <Label Grid.Row="0" Grid.Column="4" Content="Door Enabled:" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" />
+            <controls:IconLabel Grid.Row="0" Grid.Column="5" Icon="{Binding Settings.DoorChannelEnabled, Converter={StaticResource BooleanToIconConverter}}" Margin="5,0,0,0" HorizontalContentAlignment="Left" VerticalContentAlignment="Center" />
+
+            <Label Grid.Row="1" Grid.Column="4" Content="Door Channel:" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" />
+            <Label Grid.Row="1" Grid.Column="5" Content="{Binding Settings.DoorChannelName}" HorizontalContentAlignment="Left" VerticalContentAlignment="Center" />
         </Grid>
 
         <Grid Grid.Row="2">

@@ -16,6 +16,10 @@ using TeamspeakToolMvvm.Logic.Models;
 using TSClient.Models;
 using TSClient.Events;
 using TSClient.Enums;
+using TSClient.Helpers;
+using TeamspeakToolMvvm.Logic.ChatCommands;
+using TeamspeakToolMvvm.Logic.Misc;
+using TeamspeakToolMvvm.Logic.Groups;
 
 namespace TeamspeakToolMvvm.Logic.ViewModels {
     public class MainViewModel : ViewModelBase {
@@ -23,7 +27,11 @@ namespace TeamspeakToolMvvm.Logic.ViewModels {
         #region Properties
         public MySettings Settings { get; set; }
         public TeamspeakClient Client { get; set; }
-        public int KeepAliveSeconds { get; set; } = 300;
+        public Timer KeepAliveTimer { get; set; }
+        public int KeepAliveSeconds { get; set; } = 180;
+
+        public ChatCommandHandler CommandHandler { get; set; }
+        public RateLimiter RateLimiter { get; set; }
         #endregion
 
         #region View Properties
@@ -66,6 +74,10 @@ namespace TeamspeakToolMvvm.Logic.ViewModels {
             Settings.SaveTimerDelay = 1000;
             #endregion
 
+            CommandHandler = new ChatCommandHandler(this);
+            RateLimiter = new RateLimiter(Settings);
+            AccessManager.Instance = new AccessManager(this);
+
             //Auto connect if API key is set
             if (Settings.ClientAuthKey != "<your-api-key-here>") {
                 HandleConnectCommand();
@@ -76,6 +88,7 @@ namespace TeamspeakToolMvvm.Logic.ViewModels {
                 new CommandModel() { DisplayName = "Mass-Poke My Channel", Command = new RelayCommand(MassPokeInMyChannel), IconName = "HandOutlineUp" },
                 new CommandModel() { DisplayName = "Open chat with yourself", Command = new RelayCommand(OpenChatWithMyself), IconName = "Commenting" },
                 new CommandModel() { DisplayName = "Toggle no-move", Command = new RelayCommand(ToggleNoMove), IconName = "Ban" },
+                new CommandModel() { DisplayName = "Toggle door", Command = new RelayCommand(ToggleDoorChannel), IconName = "ArrowRight" },
             };
 
             RegisterMessages();
@@ -118,15 +131,20 @@ namespace TeamspeakToolMvvm.Logic.ViewModels {
 
         public void AfterConnectionInit() {
             //Initialize KeepAlive timer
-            Timer t = new Timer(new TimerCallback((o) => {
+            KeepAliveTimer = new Timer(new TimerCallback((o) => {
                 Client.SendCommand("whoami");
             }), null, 1000 * KeepAliveSeconds, 1000 * KeepAliveSeconds);
 
 
+            (MyClientId, MyChannelId) = Client.GetWhoAmI();
             Client.GetClientList(false);
+            Client.GetChannelList(false);
 
-            //Register No-Move
+            //Register for: No-Move, Door
             Client.RegisterEventCallback(typeof(NotifyClientMovedEvent), OnClientMoved);
+
+            //Register for: Chat Commands
+            Client.RegisterEventCallback(typeof(NotifyTextMessageEvent), OnTextMessageEvent);
         }
         #endregion
 
@@ -159,24 +177,54 @@ namespace TeamspeakToolMvvm.Logic.ViewModels {
         public void ToggleNoMove() {
             Settings.NoMoveEnabled = !Settings.NoMoveEnabled;
         }
+        public void ToggleDoorChannel() {
+            Settings.DoorChannelEnabled = !Settings.DoorChannelEnabled;
+        }
+        
+        #endregion
 
+
+        #region Client Move Handlers
         public void OnNoMoveEvent(NotifyClientMovedEvent evt) {
             if (!Settings.NoMoveEnabled) return;
             if (evt.Reason == ClientMoveReason.SelfMove || evt.ClientId == evt.InvokerId) return; //Ignore channel switching
 
             int myId = GetMyClientId();
             if (myId == evt.ClientId) {
-                Client me = GetClientById(myId);
+                Client me = Client.GetClientById(myId);
                 Client.SendCommand($"clientmove cid={me.ChannelId} clid={myId}");
+                Settings.StatisticMovesDenied++;
                 return;
             }
 
 
-            string otherExcludeName = Settings.NoMoveUsername;
-            Client otherClient = GetClientById(evt.ClientId);
-            if (otherExcludeName == otherClient.Nickname) {
+            if (!Settings.HasAdmin) return; //Others can only be protected with admin privileges
+            if (string.IsNullOrEmpty(Settings.NoMoveUsername)) return;
+
+            string otherExcludeNames = Settings.NoMoveUsername;
+            List<string> namesList = otherExcludeNames.Split(new char[] { ',' }).ToList();
+
+            Client otherClient = Client.GetClientById(evt.ClientId);
+            if (namesList.Contains(otherClient.Nickname)) {
                 Client.SendCommand($"clientmove cid={otherClient.ChannelId} clid={otherClient.Id}");
+                Settings.StatisticMovesDenied++;
                 return;
+            }
+        }
+
+        private void OnDoorMoveEvent(NotifyClientMovedEvent evt) {
+            if (!Settings.HasAdmin) return;
+            if (!Settings.DoorChannelEnabled) return;
+            if (string.IsNullOrEmpty(Settings.DoorChannelName)) return;
+
+            string doorName = Settings.DoorChannelName;
+            string doorMessage = string.IsNullOrEmpty(Settings.DoorMessage) ? "Left the house." : Settings.DoorMessage;
+            doorMessage = ModelParser.ToStringAttribute(doorMessage);
+
+            Channel channel = Client.GetChannelById(evt.ToChannelId);
+            if (channel.Name == doorName) {
+                Client.SendCommand($"clientkick reasonid=5 reasonmsg={doorMessage} clid={evt.ClientId}");
+                Settings.StatisticDoorUsed++;
             }
         }
         #endregion
@@ -195,18 +243,6 @@ namespace TeamspeakToolMvvm.Logic.ViewModels {
             (MyClientId, MyChannelId) = Client.GetWhoAmI();
             return MyChannelId;
         }
-
-        public Client GetClientById(int id) {
-            List<Client> clients = Client.GetClientList();
-
-            foreach (Client client in clients) {
-                if (client.Id == id) {
-                    return client;
-                }
-            }
-
-            return null;
-        }
         #endregion
 
 
@@ -215,9 +251,24 @@ namespace TeamspeakToolMvvm.Logic.ViewModels {
             NotifyClientMovedEvent evt = (NotifyClientMovedEvent)e;
 
             OnNoMoveEvent(evt);
+            OnDoorMoveEvent(evt);
+
+            if (evt.ClientId == MyClientId) {
+                MyChannelId = evt.ToChannelId;
+            }
 
             Client.GetClientList(false);
-            //Client.SendCommand("clientlist");
+        }
+
+        public void OnTextMessageEvent(Event e) {
+            NotifyTextMessageEvent evt = (NotifyTextMessageEvent)e;
+
+            CommandHandler.HandleTextMessage(evt);
+
+            if (AudioHelper.IsYouTubeVideoUrl(evt.Message)) {
+                evt.Message = $"!yt {evt.Message}";
+                CommandHandler.HandleTextMessage(evt);
+            }
         }
         #endregion
     }

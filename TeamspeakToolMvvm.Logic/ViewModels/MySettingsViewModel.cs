@@ -31,6 +31,26 @@ namespace TeamspeakToolMvvm.Logic.ViewModels
 
 
                 new HorizontalRuleSetting(),
+                new TitleSetting("Tools"),
+                new BooleanSetting("Admin Tools Enabled", "Enables a list of features only accessible when you have admin control of the TS server", nameof(SettingsInstance.HasAdmin)),
+
+                new TitleSetting("No Move") { Type = TitleType.H2 },
+                new BooleanSetting("Enabled", null, nameof(SettingsInstance.NoMoveEnabled)),
+                new StringSetting("Protected Usernames", "Comma separated list of usernames that can't be moved", nameof(SettingsInstance.NoMoveUsername)),
+
+                new TitleSetting("Door Channel") { Type = TitleType.H2 },
+                new BooleanSetting("Enabled", "When the door channel is enabled, any client joining the door channel will be kicked from the server", nameof(SettingsInstance.DoorChannelEnabled)),
+                new StringSetting("Channel Name", null, nameof(SettingsInstance.DoorChannelName)),
+                new StringSetting("Kick Message", null, nameof(SettingsInstance.DoorMessage)),
+
+
+                new TitleSetting("Playsounds") { Type = TitleType.H2 },
+                new BooleanSetting("Enabled", "Playsounds allow users in your TS server to play sounds via your audio device", nameof(SettingsInstance.PlaysoundsEnabled)),
+                new BoundedIntSetting("YouTube Max Duration", null, nameof(SettingsInstance.YoutubeMaxVideoDurationSeconds)) { Unit = "Seconds", Min = 0 },
+                new BoundedIntSetting("YouTube Max File Size", null, nameof(SettingsInstance.YoutubeMaxVideoSizeMb)) { Unit = "MB", Min = 0 },
+
+
+                new HorizontalRuleSetting(),
                 new TitleSetting("Window Settings"),
                 new BoundedIntSetting("Width", null, nameof(SettingsInstance.WindowWidth)) { Unit = "Pixels" },
                 new BoundedIntSetting("Height", null, nameof(SettingsInstance.WindowHeight)) { Unit = "Pixels" },
