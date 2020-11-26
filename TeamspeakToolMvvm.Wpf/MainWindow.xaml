@@ -10,8 +10,8 @@
         DataContext="{Binding Main, Source={StaticResource Locator}}"
         
         Title="{Binding Title}"
-        Height="536.958"
-        Width="998.464"
+        Height="{Binding Path=Settings.WindowHeight, Mode=TwoWay}"
+        Width="{Binding Path=Settings.WindowWidth, Mode=TwoWay}"
         Left="{Binding Path=Settings.WindowLeft, Mode=TwoWay}"
         Top="{Binding Path=Settings.WindowTop, Mode=TwoWay}"
         WindowState="{Binding Path=Settings.WindowIsMaximized, Converter={StaticResource BooleanToWindowStateConverter}, Mode=TwoWay}" Closing="Window_Closing">
@@ -20,6 +20,8 @@
             <RowDefinition Height="33" />
             <RowDefinition Height="50" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="5" />
+            <RowDefinition Height="140" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
@@ -35,8 +37,8 @@
                 <ColumnDefinition Width="170" />
             </Grid.ColumnDefinitions>
 
-            <controls:IconLabel Grid.Column="0" Icon="Circle" Foreground="{Binding IsConnected, Converter={StaticResource BooleanToBrushConverter}}" Height="25" VerticalContentAlignment="Center" HorizontalAlignment="Left" Margin="10,0,0,0"/>
-            <controls:IconButton Grid.Column="0" Text="{Binding ConnectButtonText}" Height="25" Command="{Binding ConnectCommand}" Margin="35,0,0,0"/>
+            <controls:IconLabel Grid.Column="0" Icon="Circle" Height="25" VerticalContentAlignment="Center" HorizontalAlignment="Left" Margin="10,0,0,0" Foreground="{Binding IsConnected, Converter={StaticResource BooleanToBrushConverter}}"/>
+            <controls:IconButton Grid.Column="0" Height="25" Margin="35,0,0,0" Text="{Binding ConnectButtonText}" Command="{Binding ConnectCommand}" Visibility="{Binding ConnectButtonVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
             <controls:IconLabel Grid.Column="1" Text="Teamspeak Tool" HorizontalContentAlignment="Center" FontSize="19" FontWeight="Bold" Icon="None" />
             <controls:IconButton Grid.Column="2" Text="Open Settings" Icon="Cog" Height="25" Command="{Binding OpenSettingsCommand}"/>
         </Grid>
@@ -129,5 +131,8 @@
             </Grid>
             <Border Grid.Column="2" BorderBrush="LightGray" BorderThickness="1" />
         </Grid>
+
+        <ListView Grid.Row="4" ItemsSource="{Binding LogTexts}" />
+        <Border Grid.Row="4" BorderBrush="LightGray" BorderThickness="1" />
     </Grid>
 </Window>

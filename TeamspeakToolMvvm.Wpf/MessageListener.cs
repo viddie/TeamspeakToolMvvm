@@ -11,6 +11,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using TeamspeakToolMvvm.Logic.Messages;
 
 namespace TeamspeakToolMvvm.Wpf
 {
@@ -33,6 +34,13 @@ namespace TeamspeakToolMvvm.Wpf
         private void InitMessenger()
         {
             Messenger.Default.Register<OpenSettingsViewMessage<MySettingsViewModel>>(SettingsMessageListener, SettingsMessageListener.HandleOpenSettingsView);
+            Messenger.Default.Register<StopApplicationMessage>(this, StopApplication);
+        }
+
+        public void StopApplication(StopApplicationMessage msg) {
+            Application.Current.Dispatcher.BeginInvoke(new Action(() => {
+                Application.Current.Shutdown();
+            }));
         }
     }
 }

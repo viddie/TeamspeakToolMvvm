@@ -38,6 +38,9 @@ namespace TeamspeakToolMvvm.Logic.Groups {
             CheckUserHasGroups(uniqueId);
 
             foreach (Group group in GetUserGroups(uniqueId)) {
+                if (group.AccessNone == true) {
+                    return false;
+                }
                 if (group.AccessAll || group.CommandAccesses.ContainsKey(chatCommand)) {
                     return true;
                 }
@@ -52,6 +55,9 @@ namespace TeamspeakToolMvvm.Logic.Groups {
             CheckUserHasGroups(uniqueId);
 
             foreach (Group group in GetUserGroups(uniqueId)) {
+                if (group.AccessNone == true) {
+                    return false;
+                }
                 if (group.AccessAll || group.SubCommandAccesses.ContainsKey(subCommand)) {
                     return true;
                 }

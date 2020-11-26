@@ -20,6 +20,8 @@ using TSClient.Helpers;
 using TeamspeakToolMvvm.Logic.ChatCommands;
 using TeamspeakToolMvvm.Logic.Misc;
 using TeamspeakToolMvvm.Logic.Groups;
+using TeamspeakToolMvvm.Logic.Economy;
+using System.Collections.ObjectModel;
 
 namespace TeamspeakToolMvvm.Logic.ViewModels {
     public class MainViewModel : ViewModelBase {
@@ -36,8 +38,8 @@ namespace TeamspeakToolMvvm.Logic.ViewModels {
 
         #region View Properties
         public string Title { get; set; } = "Teamspeak Tool - " + Assembly.GetExecutingAssembly().GetName().Version;
-        public bool IsConnected { get; set; } = false;
-
+        public bool IsConnected { get; set; } = false; 
+        public bool ConnectButtonVisible { get; set; } = false;
         public string ConnectButtonText { get; set; } = "Connect";
 
 
@@ -47,6 +49,8 @@ namespace TeamspeakToolMvvm.Logic.ViewModels {
         public List<CommandModel> GlobalCommands { get; set; }
         public List<CommandModel> ClientCommands { get; set; }
         public List<CommandModel> ChannelCommands { get; set; }
+
+        public ObservableCollection<string> LogTexts { get; set; } = new ObservableCollection<string>();
         #endregion
 
         #region Commands
@@ -78,6 +82,8 @@ namespace TeamspeakToolMvvm.Logic.ViewModels {
             CommandHandler = new ChatCommandHandler(this);
             RateLimiter = new RateLimiter(Settings);
             AccessManager.Instance = new AccessManager(this);
+            EconomyManager.Instance = new EconomyManager(this);
+            CooldownManager.Instance = new CooldownManager(this);
 
             //Auto connect if API key is set
             if (Settings.ClientAuthKey != "<your-api-key-here>") {
@@ -102,12 +108,15 @@ namespace TeamspeakToolMvvm.Logic.ViewModels {
         #region Command Handlers
         public void HandleOpenSettingsCommand() {
             MySettingsViewModel svm = new MySettingsViewModel(Settings);
+            svm.LoadSettings();
             MessengerInstance.Send(new OpenSettingsViewMessage<MySettingsViewModel>(svm, null, () => {
                 svm.OnSave();
             }));
         }
 
         public async void HandleConnectCommand() {
+            if (IsConnected) return;
+
             string authKey = Settings.ClientAuthKey;
 
             if (Client != null) Client.CloseClient();
@@ -116,28 +125,49 @@ namespace TeamspeakToolMvvm.Logic.ViewModels {
             try {
                 ConnectButtonText = "Connecting...";
                 await Task.Run(() => {
-                    Client.ConnectClient();
-                    Client.AuthorizeClient(authKey);
-                    AfterConnectionInit();
+                    try {
+                        Client.ConnectClient();
+                        Client.AuthorizeClient(authKey);
+                        Client.ConnectionClosedCallback = OnConnectionClosed;
+                        AfterConnectionInit(true);
+                    } catch (Exception) {
+                        AfterConnectionInit(false);
+                    }
                 });
-                IsConnected = true;
-                ConnectButtonText = "Connected!";
-
             } catch (TeamspeakConnectionException) {
-                IsConnected = false;
-                ConnectButtonText = "Error";
+                AfterConnectionInit(false);
             } catch (Exception) {
-                IsConnected = false;
-                ConnectButtonText = "Error";
+                AfterConnectionInit(false);
             }
         }
 
-        public void AfterConnectionInit() {
+        public void AfterConnectionInit(bool success) {
+            if (!success) {
+                IsConnected = false;
+                ConnectButtonVisible = true;
+                ConnectButtonText = "Error";
+                Task.Run(() => {
+                    Thread.Sleep(3000);
+                    ConnectButtonText = "Connect";
+                });
+                return;
+            }
+
+            IsConnected = true;
+            ConnectButtonText = "Connected!";
+            Task.Run(() => {
+                Thread.Sleep(3000);
+                ConnectButtonVisible = false;
+            });
+
             //Initialize KeepAlive timer
+            if (KeepAliveTimer != null) KeepAliveTimer.Dispose();
             KeepAliveTimer = new Timer(new TimerCallback((o) => {
                 Client.SendCommand("whoami");
             }), null, 1000 * KeepAliveSeconds, 1000 * KeepAliveSeconds);
 
+            //Start economy timer
+            EconomyManager.Instance.StartTickTimer();
 
             (MyClientId, MyChannelId) = Client.GetWhoAmI();
             Client.GetClientList(false);
@@ -149,6 +179,20 @@ namespace TeamspeakToolMvvm.Logic.ViewModels {
             //Register for: Chat Commands
             Client.RegisterEventCallback(typeof(NotifyTextMessageEvent), OnTextMessageEvent);
         }
+
+        public void OnConnectionClosed() {
+            IsConnected = false;
+            ConnectButtonVisible = true;
+            ConnectButtonText = "Connect";
+        }
+
+        public bool CheckConnection() {
+            if (!IsConnected) {
+                MessengerInstance.Send(new DisplayErrorMessage() { Caption = "Connection lost", Message = "The client is currently not connected..." });
+            }
+
+            return IsConnected;
+        }
         #endregion
 
         #region Message Handlers
@@ -159,20 +203,29 @@ namespace TeamspeakToolMvvm.Logic.ViewModels {
         #endregion
 
         #region Methods
-
+        public void LogMessage(string text) {
+            MessengerInstance.Send(new AddLogMessage(text));
+        }
         #endregion
 
         #region TS3 Actions
         public void MassPokeInMyChannel() {
+            if (!CheckConnection()) return;
+
             int myChannelId = GetMyChannelId();
 
+            LogMessage($"Mass poking all clients in your channel...");
             List<Client> clients = Client.GetClientsInChannel(myChannelId);
             foreach (Client client in clients) {
+                LogMessage($"  > Poking '{client.Nickname}'");
                 Client.SendCommand($"clientpoke clid={client.Id} msg=Poke\\sTest");
             }
         }
 
         public void OpenChatWithMyself() {
+            if (!CheckConnection()) return;
+
+            LogMessage($"Opened chat with yourself");
             int myId = GetMyClientId();
             Client.SendCommand($"sendtextmessage targetmode=1 target={myId} msg=Hola");
         }
@@ -196,6 +249,7 @@ namespace TeamspeakToolMvvm.Logic.ViewModels {
             if (myId == evt.ClientId) {
                 Client me = Client.GetClientById(myId);
                 Client.SendCommand($"clientmove cid={me.ChannelId} clid={myId}");
+                LogMessage($"No-Move triggered for yourself");
                 Settings.StatisticMovesDenied++;
                 return;
             }
@@ -210,6 +264,7 @@ namespace TeamspeakToolMvvm.Logic.ViewModels {
             Client otherClient = Client.GetClientById(evt.ClientId);
             if (namesList.Contains(otherClient.Nickname)) {
                 Client.SendCommand($"clientmove cid={otherClient.ChannelId} clid={otherClient.Id}");
+                LogMessage($"No-Move triggered for '{otherClient.Nickname}'");
                 Settings.StatisticMovesDenied++;
                 return;
             }
@@ -226,6 +281,7 @@ namespace TeamspeakToolMvvm.Logic.ViewModels {
 
             Channel channel = Client.GetChannelById(evt.ToChannelId);
             if (channel.Name == doorName) {
+                LogMessage($"{Client.GetClientById(evt.ClientId).Nickname} used the door channel");
                 Client.SendCommand($"clientkick reasonid=5 reasonmsg={doorMessage} clid={evt.ClientId}");
                 Settings.StatisticDoorUsed++;
             }

@@ -18,11 +18,12 @@ namespace TeamspeakToolMvvm.Logic.ViewModels
         #region Settings
         #endregion
 
-        public MySettingsViewModel(MySettings instance) : base(instance) { }
+        public MySettingsViewModel(MySettings instance) : base(instance) {
+            SettingsInstance = instance;
+        }
 
         protected override List<Setting> CreateSettings()
         {
-            
             return new List<Setting>() {
                 new TitleSetting("TS Query Settings"),
                 new PasswordStringSetting("Auth Key", null, nameof(SettingsInstance.ClientAuthKey)) { HasShowPasswordButton = true },
@@ -48,6 +49,15 @@ namespace TeamspeakToolMvvm.Logic.ViewModels
                 new BooleanSetting("Enabled", "Playsounds allow users in your TS server to play sounds via your audio device", nameof(SettingsInstance.PlaysoundsEnabled)),
                 new BoundedIntSetting("YouTube Max Duration", null, nameof(SettingsInstance.YoutubeMaxVideoDurationSeconds)) { Unit = "Seconds", Min = 0 },
                 new BoundedIntSetting("YouTube Max File Size", null, nameof(SettingsInstance.YoutubeMaxVideoSizeMb)) { Unit = "MB", Min = 0 },
+
+
+                new HorizontalRuleSetting(),
+                new TitleSetting("Economy") { },
+                new StringSetting("Eco Unit Name", null, nameof(SettingsInstance.EcoPointUnitName)),
+                new BooleanSetting("Ticks Enabled", "When enabled, all {Tick Intervall} seconds an eco unit is granted to everyone connected to the server", nameof(SettingsInstance.EcoTicksEnabled)),
+                new BoundedIntSetting("Tick Intervall", null, nameof(SettingsInstance.EcoTickTimeSeconds)) { Unit = "seconds" },
+                new BoundedIntSetting("Balance Soft Limit", "Soft limit means one can't exceed this limit through ticks. Any other means of acquiring balance except roulette will be unavailable while at or above this limit.", nameof(SettingsInstance.EcoSoftBalanceLimit)) { Unit = SettingsInstance.EcoPointUnitName },
+                new BoundedIntSetting("Balance Hard Limit", "This limit can't be overstepped in any case.", nameof(SettingsInstance.EcoHardBalanceLimit)) { Unit = SettingsInstance.EcoPointUnitName },
 
 
                 new HorizontalRuleSetting(),

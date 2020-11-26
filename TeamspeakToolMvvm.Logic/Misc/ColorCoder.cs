@@ -7,25 +7,33 @@ using System.Threading.Tasks;
 namespace TeamspeakToolMvvm.Logic.Misc {
     public static class ColorCoder {
 
-        public static string ColorText(Color color, string text) {
+        public static string ColorText(Color color, object text) {
             return $"[color=#{color.AsHex}]{text}[/color]";
         }
 
-        public static string Error(string text) {
+        public static string Error(object text) {
             return $"[color=#{Color.LightRed.AsHex}]{text}[/color]";
         }
-        public static string Success(string text) {
+        public static string Success(object text) {
             return $"[color=#{Color.Green.AsHex}]{text}[/color]";
         }
-        public static string Attention(string text) {
+        public static string SuccessDim(object text) {
+            return $"[color=#{Color.DarkGreen.AsHex}]{text}[/color]";
+        }
+
+        
+        public static string Attention(object text) {
             return $"[color=#{Color.LightBlue.AsHex}]{text}[/color]";
         }
 
-        public static string Username(string name) {
-            return $"[b]'@{name}'[/b]";
+        public static string Username(object name) {
+            return $"[b]@'{name}'[/b]";
         }
-        public static string Bold(string text) {
+        public static string Bold(object text) {
             return $"[b]{text}[/b]";
+        }
+        public static string Currency(object text, string unit) {
+            return $"[b]{text} {unit}[/b]";
         }
 
     }

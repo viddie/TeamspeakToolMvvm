@@ -16,6 +16,7 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
 
         public abstract string CommandPrefix { get; set; }
         public abstract List<string> CommandAliases { get; set; }
+        public abstract bool HasExceptionWhiteList { get; set; }
 
 
 
@@ -23,11 +24,19 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
 
         public bool CanExecute(string uniqueId, string command, List<string> parameters) {
             Type t = GetType();
-            if (AccessManager.UserHasAccessToCommand(uniqueId, t)) return true;
-            return CanExecuteSubCommand(uniqueId, command, parameters);
+
+            if (HasExceptionWhiteList) {
+                if (AccessManager.UserHasAccessToCommand(uniqueId, t)) return true;
+                return CanExecuteSubCommand(uniqueId, command, parameters);
+            } else {
+                if (!AccessManager.UserHasAccessToCommand(uniqueId, t)) return false;
+                return CanExecuteSubCommand(uniqueId, command, parameters);
+            }
+
         }
         public abstract bool CanExecuteSubCommand(string uniqueId, string command, List<string> parameters);
         public abstract bool IsValidCommandSyntax(string command, List<string> parameters);
-        public abstract string GetUsageHelp(string command, List<string> parameters);
+        public abstract string GetUsageSyntax(string command, List<string> parameters);
+        public abstract string GetUsageDescription(string command, List<string> parameters);
     }
 }

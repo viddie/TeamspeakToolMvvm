@@ -18,7 +18,7 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
         public MainViewModel Parent { get; set; }
         public MySettings Settings { get; set; }
 
-        public List<ChatCommand> ChatCommands { get; set; } = new List<ChatCommand>() {
+        public static List<ChatCommand> ChatCommands { get; set; } = new List<ChatCommand>() {
             new TimeCommand(),
             new YouTubeCommand(),
             new CoinFlipCommand(),
@@ -26,6 +26,12 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
             new RollCommand(),
             new SayCommand(),
             new TeamsCommand(),
+            new DynamicCommand(),
+            new BalanceCommand(),
+            new HelpCommand(),
+            new StopCommand(),
+            new RouletteCommand(),
+            new DailyCommand(),
         };
 
 
@@ -37,7 +43,9 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
         public void HandleTextMessage(NotifyTextMessageEvent evt) {
             if (!Settings.ChatCommandsEnabled || string.IsNullOrEmpty(evt.Message) || !evt.Message.StartsWith(Settings.ChatCommandPrefix)) return;
 
+            Parent.LogMessage($"{evt.InvokerName} requested command: \"{evt.Message}\"");
 
+            //Copy event as to not mess up other event handlers
             NotifyTextMessageEvent tempEvt = new NotifyTextMessageEvent();
             evt.CopyProperties(tempEvt);
             evt = tempEvt;
@@ -89,8 +97,14 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
                 string joined = string.Join(", ", ex.AllFoundTargets.Select(client => ColorCoder.Bold($"'{client.Nickname}'")));
                 sendMessageCallback.Invoke(ColorCoder.Error($"Too many targets were found with {ColorCoder.Bold($"'{ex.Message}'")} in their name ({joined})"));
 
+            } catch (CooldownNotExpiredException ex) {
+                sendMessageCallback.Invoke(ColorCoder.Error($"That command is still on cooldown. ({ColorCoder.Bold($"{CooldownManager.FormatCooldownTime(ex.Duration)}")} cooldown)"));
+
             } catch (NoTargetsFoundException ex) {
                 sendMessageCallback.Invoke(ColorCoder.Error($"No targets were found with {ColorCoder.Bold($"'{ex.Message}'")} in their name..."));
+
+            } catch (Exception ex) {
+                Parent.LogMessage($"Encountered exception in command '{commandToExecute.GetType().Name}': {ex}");
             }
         }
 
@@ -102,16 +116,17 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
                     chatCommand.Settings = Settings;
 
                     try {
-                        if (chatCommand.IsValidCommandSyntax(command, parameters)) {
-                            if (!chatCommand.CanExecute(uniqueId, command, parameters)) {
-                                throw new NoPermissionException();
-                            }
-                            return chatCommand;
-                        } else {
-                            throw new ChatCommandInvalidSyntaxException(chatCommand.GetUsageHelp(command, parameters));
+                        if (!chatCommand.CanExecute(uniqueId, command, parameters)) {
+                            throw new NoPermissionException();
                         }
+                        if (!chatCommand.IsValidCommandSyntax(command, parameters)) {
+                            throw new ChatCommandInvalidSyntaxException(chatCommand.GetUsageSyntax(command, parameters));
+                        }
+
+                        return chatCommand;
+
                     } catch (CommandParameterInvalidFormatException ex) {
-                        ex.UsageHelp = chatCommand.GetUsageHelp(command, parameters);
+                        ex.UsageHelp = chatCommand.GetUsageSyntax(command, parameters);
                         throw ex;
                     }
                 }

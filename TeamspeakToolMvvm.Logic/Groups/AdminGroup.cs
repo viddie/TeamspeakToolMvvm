@@ -10,6 +10,7 @@ namespace TeamspeakToolMvvm.Logic.Groups {
         public override string Name { get; set; } = "admin";
         public override string Description { get; set; } = "The admin group has control over all features";
         public override bool AccessAll { get; set; } = true;
+        public override bool AccessNone { get; set; } = false;
         public override bool IsDefault { get; set; } = false;
         public override Group InheritGroup { get; set; }
         public override Dictionary<Type, bool> CommandAccesses { get; set; } = new Dictionary<Type, bool>();

@@ -11,17 +11,23 @@ namespace TeamspeakToolMvvm.Logic.Groups {
         public override string Name { get; set; } = "user";
         public override string Description { get; set; } = "The default user group. Has Access to most commands";
         public override bool AccessAll { get; set; } = false;
+        public override bool AccessNone { get; set; } = false;
         public override bool IsDefault { get; set; } = true;
         public override Group InheritGroup { get; set; } = null;
         public override Dictionary<Type, bool> CommandAccesses { get; set; } = new Dictionary<Type, bool>() {
-            [typeof(YouTubeCommand)] = true,
-            [typeof(TimeCommand)] = true,
+            [typeof(BalanceCommand)] = true,
             [typeof(CoinFlipCommand)] = true,
+            [typeof(DailyCommand)] = true,
+            [typeof(HelpCommand)] = true,
             [typeof(RollCommand)] = true,
+            [typeof(RouletteCommand)] = true,
             [typeof(SayCommand)] = true,
+            [typeof(TeamsCommand)] = true,
+            [typeof(TimeCommand)] = true,
+            [typeof(YouTubeCommand)] = true,
         };
         public override Dictionary<string, bool> SubCommandAccesses { get; set; } = new Dictionary<string, bool>() {
-
+            ["command:commands_list"] = true,
         };
     }
 }

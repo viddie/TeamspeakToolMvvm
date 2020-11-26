@@ -13,6 +13,7 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
         public override string CommandPrefix { get; set; } = "groups";
         public override List<string> CommandAliases { get; set; } = new List<string>() {  };
 
+        public override bool HasExceptionWhiteList { get; set; } = true;
 
         public override bool IsValidCommandSyntax(string command, List<string> parameters) {
             if (parameters.Count < 2) return false;
@@ -23,7 +24,7 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
             return true;
         }
 
-        public override string GetUsageHelp(string command, List<string> parameters) {
+        public override string GetUsageSyntax(string command, List<string> parameters) {
             if (parameters.Count >= 1) {
                 if (parameters[0] == "add") {
                     return $"{command} add <target_user> <groupName>";
@@ -36,8 +37,21 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
             return $"{command} <add|remove|list> <target_user> [groupName]";
         }
 
+        public override string GetUsageDescription(string command, List<string> parameters) {
+            if (parameters.Count >= 1) {
+                if (parameters[0] == "add") {
+                    return $"Adds a user to a group";
+                } else if (parameters[0] == "remove") {
+                    return $"Removes a user from a group";
+                } else if (parameters[0] == "list") {
+                    return $"Lists all groups of a user";
+                }
+            }
+            return $"Manage user groups";
+        }
+
         public override bool CanExecuteSubCommand(string uniqueId, string command, List<string> parameters) {
-            if (parameters[0] == "list" && AccessManager.UserHasAccessToSubCommand(uniqueId, "command:groups_list")) return true;
+            if (parameters.Count > 0 && parameters[0] == "list" && AccessManager.UserHasAccessToSubCommand(uniqueId, "command:groups_list")) return true;
             return false;
         }
 

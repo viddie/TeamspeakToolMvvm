@@ -20,8 +20,8 @@ namespace TeamspeakToolMvvm.Logic.Config
 
 
         #region Window Properties
-        public int WindowWidth { get; set; } = 530;
-        public int WindowHeight { get; set; } = 350;
+        public int WindowWidth { get; set; } = 830;
+        public int WindowHeight { get; set; } = 600;
         public int WindowLeft { get; set; } = 200;
         public int WindowTop { get; set; } = 200;
         public bool WindowIsMaximized { get; set; } = false;
@@ -66,10 +66,18 @@ namespace TeamspeakToolMvvm.Logic.Config
 
         #region Statistics
         public int StatisticMovesDenied { get; set; } = 0;
+
         public int StatisticDoorUsed { get; set; } = 0;
+
         public int StatisticYouTubeLinksFetched { get; set; } = 0;
+
         public int StatisticCoinflipHeads { get; set; } = 0;
         public int StatisticCoinflipTails { get; set; } = 0;
+
+        public int StatisticRoulettePointsWon { get; set; } = 0;
+        public int StatisticRoulettePointsLost { get; set; } = 0;
+        public int StatisticRouletteJackpots { get; set; } = 0;
+        public int StatisticRouletteGames { get; set; } = 0;
         #endregion
 
 
@@ -82,6 +90,43 @@ namespace TeamspeakToolMvvm.Logic.Config
 
         #region Access Manager
         public Dictionary<string, List<string>> UserGroups { get; set; } = new Dictionary<string, List<string>>();
+        #endregion
+
+
+        #region Economy Manager
+        public string EcoPointUnitName { get; set; } = "Pts.";
+        public int EcoTickGain { get; set; } = 1;
+        public bool EcoTicksEnabled { get; set; } = true;
+        public DateTime LastTick { get; set; }
+        public int EcoTickTimeSeconds { get; set; } = 60 * 45;
+        public int EcoSoftBalanceLimit { get; set; } = 100;
+        public int EcoHardBalanceLimit { get; set; } = int.MaxValue;
+        public Dictionary<string, int> UserBalances { get; set; } = new Dictionary<string, int>();
+        #endregion
+
+
+        #region Cooldown Manager
+        public Dictionary<string, Dictionary<string, DateTime>> CooldownEarliestPossibleCalls { get; set; } = new Dictionary<string, Dictionary<string, DateTime>>();
+        #endregion
+
+
+        #region Dynamic Commands
+        public Dictionary<string, string> DynamicCommands { get; set; } = new Dictionary<string, string>();
+        #endregion
+
+
+        #region Roulette
+        public bool RouletteEnabled { get; set; } = true;
+        public TimeSpan RouletteCooldown { get; set; } = TimeSpan.FromMinutes(5);
+        public double RouletteWinChancePercent { get; set; } = 50;
+        public double RouletteWinYieldMultiplier { get; set; } = 2;
+        public double RouletteJackpotChancePercent { get; set; } = 0.1;
+        public double RouletteJackpotMultiplier { get; set; } = 3;
+        #endregion
+
+
+        #region Daily
+        public int DailyReward { get; set; } = 9;
         #endregion
 
 

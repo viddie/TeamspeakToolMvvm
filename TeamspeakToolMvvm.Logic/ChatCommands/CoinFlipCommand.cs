@@ -12,19 +12,26 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
     public class CoinFlipCommand : ChatCommand {
         public override string CommandPrefix { get; set; } = "coinflip";
         public override List<string> CommandAliases { get; set; } = new List<string>() { "coin" };
+        public override bool HasExceptionWhiteList { get; set; } = true;
+
+        public int RollCount;
 
         public override bool IsValidCommandSyntax(string command, List<string> parameters) {
             if (parameters.Count > 1) return false;
 
-            if (parameters.Count == 1 && !int.TryParse(parameters[0], out int res)) {
-                throw new CommandParameterInvalidFormatException() { ParameterPosition = 1, ParameterName = "amount_of_coins", ParameterType = typeof(int), ParameterValue = parameters[0] };
+            if (parameters.Count == 1 && !int.TryParse(parameters[0], out int RollCount)) {
+                throw new CommandParameterInvalidFormatException(1, parameters[0], "amount_of_coins", typeof(int), GetUsageSyntax(command, parameters));
             }
 
             return true;
         }
 
-        public override string GetUsageHelp(string command, List<string> parameters) {
+        public override string GetUsageSyntax(string command, List<string> parameters) {
             return "coinflip [amount_of_coins]";
+        }
+
+        public override string GetUsageDescription(string command, List<string> parameters) {
+            return "Flips a coin";
         }
 
         public override bool CanExecuteSubCommand(string uniqueId, string command, List<string> parameters) {
@@ -50,18 +57,17 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
                 }
 
             } else {
-                int count = int.Parse(parameters[0]);
-                if (count <= 0) {
+                if (RollCount <= 0) {
                     messageCallback.Invoke($"Why would you want to flip that, {ColorCoder.Username(evt.InvokerName)}...");
                     return;
-                } else if (count > 10000000) {
-                    string inEuro = ""+count / 100;
+                } else if (RollCount > 10000000) {
+                    string inEuro = ""+ RollCount / 100;
                     messageCallback.Invoke($"Even with 1-Cent coins that would be {inEuro:0.##} EUR. I doubt you will ever have that many coins to flip, {ColorCoder.Username(evt.InvokerName)} :^)");
                     return;
                 }
 
 
-                for (int i = 0; i < count; i++) {
+                for (int i = 0; i < RollCount; i++) {
                     if ((i % 2 == 0 && r.NextDouble() >= 0.5) || (i % 2 == 1 && r.NextDouble() <= 0.5)) {
                         rolledHeads++;
                     } else {
@@ -70,7 +76,7 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
                 }
 
 
-                messageCallback.Invoke($"{ColorCoder.Username(evt.InvokerName)} flipped {ColorCoder.Bold(""+count)} coins... they showed {ColorCoder.Bold($"Heads {rolledHeads}")} and {ColorCoder.Bold($"Tails {rolledTails}")} times");
+                messageCallback.Invoke($"{ColorCoder.Username(evt.InvokerName)} flipped {ColorCoder.Bold(""+ RollCount)} coins... they showed {ColorCoder.Bold($"Heads {rolledHeads}")} and {ColorCoder.Bold($"Tails {rolledTails}")} times");
             }
 
             Settings.StatisticCoinflipHeads += rolledHeads;

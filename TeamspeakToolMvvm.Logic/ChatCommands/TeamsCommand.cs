@@ -27,6 +27,7 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
     public class TeamsCommand : ChatCommand {
         public override string CommandPrefix { get; set; } = "teams";
         public override List<string> CommandAliases { get; set; } = new List<string>() { "team" };
+        public override bool HasExceptionWhiteList { get; set; } = true;
 
 
         public uint TeamCount = 2;
@@ -38,7 +39,7 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
             if (parameters.Count == 1 && parameters[0] == "channel") return true;
             if (parameters.Count == 2 && parameters[0] == "channel") {
                 if (!uint.TryParse(parameters[1], out TeamCount) || TeamCount == 0) {
-                    throw new CommandParameterInvalidFormatException() { ParameterPosition = 2, ParameterName = "teams", ParameterType = typeof(uint), ParameterValue = parameters[1] };
+                    throw new CommandParameterInvalidFormatException(2, parameters[1], "teams", typeof(uint), GetUsageSyntax(command, parameters));
                 }
                 return true;
             }
@@ -47,7 +48,7 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
             if (parameters.Count == 1 && parameters[0] == "server") return true;
             if (parameters.Count == 2 && parameters[0] == "server") {
                 if (!uint.TryParse(parameters[1], out TeamCount) || TeamCount == 0) {
-                    throw new CommandParameterInvalidFormatException() { ParameterPosition = 2, ParameterName = "teams", ParameterType = typeof(uint), ParameterValue = parameters[1] };
+                    throw new CommandParameterInvalidFormatException(2, parameters[1], "teams", typeof(uint), GetUsageSyntax(command, parameters));
                 }
                 return true;
             }
@@ -61,10 +62,14 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
             return true;
         }
 
-        public override string GetUsageHelp(string command, List<string> parameters) {
+        public override string GetUsageSyntax(string command, List<string> parameters) {
             if (parameters.Count >= 1 && parameters[0] == "channel") return $"{command} channel [teams]";
             if (parameters.Count >= 1 && parameters[0] == "server") return $"{command} server [teams]";
             return $"{command} [teams] [name1] [name2]...";
+        }
+
+        public override string GetUsageDescription(string command, List<string> parameters) {
+            return $"Quickly group users into teams";
         }
 
         public override bool CanExecuteSubCommand(string uniqueId, string command, List<string> parameters) {

@@ -108,18 +108,25 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ChatCommands\BalanceCommand.cs" />
     <Compile Include="ChatCommands\ChatCommand.cs" />
     <Compile Include="ChatCommands\ChatCommandHandler.cs" />
     <Compile Include="ChatCommands\CoinFlipCommand.cs" />
+    <Compile Include="ChatCommands\DailyCommand.cs" />
+    <Compile Include="ChatCommands\DynamicCommand.cs" />
     <Compile Include="ChatCommands\GroupsCommand.cs" />
+    <Compile Include="ChatCommands\HelpCommand.cs" />
     <Compile Include="ChatCommands\RollCommand.cs" />
+    <Compile Include="ChatCommands\RouletteCommand.cs" />
     <Compile Include="ChatCommands\SayCommand.cs" />
+    <Compile Include="ChatCommands\StopCommand.cs" />
     <Compile Include="ChatCommands\TeamsCommand.cs" />
     <Compile Include="ChatCommands\TimeCommand.cs" />
     <Compile Include="ChatCommands\YouTubeCommand.cs" />
     <Compile Include="Exceptions\ChatCommandInvalidSyntax.cs" />
     <Compile Include="Exceptions\ChatCommandNotFound.cs" />
     <Compile Include="Exceptions\CommandParameterInvalidFormatException.cs" />
+    <Compile Include="Exceptions\CooldownNotExpiredException.cs" />
     <Compile Include="Exceptions\GroupNotFoundException.cs" />
     <Compile Include="Exceptions\NoPermissionException.cs" />
     <Compile Include="Groups\AdminGroup.cs" />
@@ -128,9 +135,13 @@
     <Compile Include="Groups\AccessManager.cs" />
     <Compile Include="Groups\ModeratorGroup.cs" />
     <Compile Include="Groups\UserGroup.cs" />
+    <Compile Include="Messages\AddLogMessage.cs" />
     <Compile Include="Messages\ApplicationClosingMessage.cs" />
+    <Compile Include="Messages\StopApplicationMessage.cs" />
     <Compile Include="Misc\AudioHelper.cs" />
     <Compile Include="Misc\ColorCoder.cs" />
+    <Compile Include="Economy\EconomyManager.cs" />
+    <Compile Include="Misc\CooldownManager.cs" />
     <Compile Include="Misc\Extensions.cs" />
     <Compile Include="Misc\RateLimiter.cs" />
     <Compile Include="Misc\Utils.cs" />

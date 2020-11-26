@@ -14,7 +14,13 @@ namespace TeamspeakToolMvvm.Logic.Exceptions {
         public Type ParameterType { get; set; }
         public string UsageHelp { get; set; }
 
-        public CommandParameterInvalidFormatException() { }
+        public CommandParameterInvalidFormatException(int pos, object val, string name, Type type, string help) {
+            ParameterPosition = pos;
+            ParameterValue = val;
+            ParameterName = name;
+            ParameterType = type;
+            UsageHelp = help;
+        }
         public CommandParameterInvalidFormatException(string message) : base(message) { }
         public CommandParameterInvalidFormatException(string message, Exception innerEx) : base(message, innerEx) { }
 

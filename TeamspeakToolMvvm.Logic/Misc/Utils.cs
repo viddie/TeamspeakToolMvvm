@@ -15,5 +15,10 @@ namespace TeamspeakToolMvvm.Logic.Misc
             string folder = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
             return Path.Combine(folder, fileName);
         }
+
+
+        public static string FormatTimeSpan(TimeSpan ts) {
+            return ts.ToString();
+        }
     }
 }

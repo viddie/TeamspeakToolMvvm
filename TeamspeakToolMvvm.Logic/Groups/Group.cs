@@ -11,6 +11,7 @@ namespace TeamspeakToolMvvm.Logic.Groups {
         public abstract string Name { get; set; }
         public abstract string Description { get; set; }
         public abstract bool AccessAll { get; set; }
+        public abstract bool AccessNone { get; set; }
         public abstract bool IsDefault { get; set; }
         public abstract Group InheritGroup { get; set; }
 

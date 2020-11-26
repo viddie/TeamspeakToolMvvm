@@ -10,6 +10,7 @@ namespace TeamspeakToolMvvm.Logic.Groups {
         public override string Name { get; set; } = "banned";
         public override string Description { get; set; } = "A banned user can not use any commands.";
         public override bool AccessAll { get; set; } = false;
+        public override bool AccessNone { get; set; } = true;
         public override bool IsDefault { get; set; } = false;
         public override Group InheritGroup { get; set; } = null;
         public override Dictionary<Type, bool> CommandAccesses { get; set; } = new Dictionary<Type, bool>();

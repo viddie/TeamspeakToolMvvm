@@ -9,16 +9,19 @@ using TSClient.Events;
 namespace TeamspeakToolMvvm.Logic.ChatCommands {
     public class TimeCommand : ChatCommand {
         public override string CommandPrefix { get; set; } = "time";
-        public override List<string> CommandAliases { get; set; } = new List<string>() {
-            "now",
-        };
+        public override List<string> CommandAliases { get; set; } = new List<string>() { "now" };
+        public override bool HasExceptionWhiteList { get; set; } = true;
 
         public override bool IsValidCommandSyntax(string command, List<string> parameters) {
             return true;
         }
 
-        public override string GetUsageHelp(string command, List<string> parameters) {
+        public override string GetUsageSyntax(string command, List<string> parameters) {
             return "time";
+        }
+
+        public override string GetUsageDescription(string command, List<string> parameters) {
+            return $"Checks the clock for you";
         }
 
         public override bool CanExecuteSubCommand(string uniqueId, string command, List<string> parameters) {

@@ -13,14 +13,19 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
     class YouTubeCommand : ChatCommand {
         public override string CommandPrefix { get; set; } = "youtube";
         public override List<string> CommandAliases { get; set; } = new List<string>() { "yt" };
+        public override bool HasExceptionWhiteList { get; set; } = true;
 
 
         public override bool IsValidCommandSyntax(string command, List<string> parameters) {
             return parameters.Count == 1;
         }
 
-        public override string GetUsageHelp(string command, List<string> parameters) {
+        public override string GetUsageSyntax(string command, List<string> parameters) {
             return "youtube <url|id>";
+        }
+
+        public override string GetUsageDescription(string command, List<string> parameters) {
+            return $"Fetches basic meta data for a linked youtube video";
         }
 
         public override bool CanExecuteSubCommand(string uniqueId, string command, List<string> parameters) {
