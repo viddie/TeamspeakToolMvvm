@@ -74,6 +74,8 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
             Parent.Settings.StatisticYouTubeLinksFetched++;
 
             string response = $"{yt} ⇒ [url={url}]{title}[/url] [{duration}] from [B]{author}[/B] | {likes} | {dislikes} | {ratioStr}";
+
+            Parent.IgnoreSelfTextMessage(response);
             messageCallback(response);
         }
     }

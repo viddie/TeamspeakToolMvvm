@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TeamspeakToolMvvm.Logic.ChatCommands;
 using TeamspeakToolMvvm.Logic.Groups;
 
 namespace TeamspeakToolMvvm.Logic.Config
@@ -33,6 +34,8 @@ namespace TeamspeakToolMvvm.Logic.Config
         public int ClientPort { get; set; } = 25639;
 
         public bool HasAdmin { get; set; } = false;
+
+        public Dictionary<string, string> LastSeenUsernames { get; set; } = new Dictionary<string, string>();
         #endregion
 
 
@@ -83,8 +86,27 @@ namespace TeamspeakToolMvvm.Logic.Config
 
         #region Playsounds
         public bool PlaysoundsEnabled { get; set; } = true;
-        public int YoutubeMaxVideoDurationSeconds { get; set; } = 60 * 60 * 1;
-        public int YoutubeMaxVideoSizeMb { get; set; } = 50;
+        public string PlaysoundsSoundDevice { get; set; } = null;
+        public int PlaysoundsYoutubeMaxVideoDurationSeconds { get; set; } = 60 * 60 * 1;
+        public double PlaysoundsYoutubeMaxVideoSizeMb { get; set; } = 50.0;
+        public int PlaysoundsSoundsPerPage { get; set; } = 15;
+        public Dictionary<string, Dictionary<string, double>> PlaysoundsModifiers { get; set; } = new Dictionary<string, Dictionary<string, double>>() {
+            ["nc"] = new Dictionary<string, double>() {
+                [PlaysoundsCommand.ModifierNameVolume] = 1.0,
+                [PlaysoundsCommand.ModifierNameSpeed] = 1.20,
+                [PlaysoundsCommand.ModifierNamePitch] = 1.20,
+            },
+            ["demon"] = new Dictionary<string, double>() {
+                [PlaysoundsCommand.ModifierNameVolume] = 1.1,
+                [PlaysoundsCommand.ModifierNameSpeed] = 0.8,
+                [PlaysoundsCommand.ModifierNamePitch] = 0.8,
+            },
+            ["earrape"] = new Dictionary<string, double>() {
+                [PlaysoundsCommand.ModifierNameVolume] = 10.0,
+                [PlaysoundsCommand.ModifierNameSpeed] = 1.0,
+                [PlaysoundsCommand.ModifierNamePitch] = 1.0,
+            },
+        };
         #endregion
 
 
@@ -97,7 +119,7 @@ namespace TeamspeakToolMvvm.Logic.Config
         public string EcoPointUnitName { get; set; } = "Pts.";
         public int EcoTickGain { get; set; } = 1;
         public bool EcoTicksEnabled { get; set; } = true;
-        public DateTime LastTick { get; set; }
+        public DateTime EcoLastTick { get; set; }
         public int EcoTickTimeSeconds { get; set; } = 60 * 45;
         public int EcoSoftBalanceLimit { get; set; } = 100;
         public int EcoHardBalanceLimit { get; set; } = int.MaxValue;
@@ -126,6 +148,7 @@ namespace TeamspeakToolMvvm.Logic.Config
 
 
         #region Daily
+        public bool DailyEnabled { get; set; } = true;
         public int DailyReward { get; set; } = 9;
         #endregion
 

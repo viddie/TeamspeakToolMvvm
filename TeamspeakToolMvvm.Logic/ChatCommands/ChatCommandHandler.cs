@@ -32,6 +32,10 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
             new StopCommand(),
             new RouletteCommand(),
             new DailyCommand(),
+            new TickCommand(),
+            new ScrapeCommand(),
+            new ReplayCommand(),
+            new PlaysoundsCommand(),
         };
 
 
@@ -134,5 +138,34 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
 
             throw new ChatCommandNotFoundException();
         }
+
+
+        /*
+         Python code to escape the character (") in parameters:
+
+            i = 0
+
+            while True:
+                if(i >= len(parameters)):
+                    break
+                param = parameters[i]
+
+                if(param.startswith("\"")):
+                    startAt = i
+                    while not parameters[i].endswith("\""):
+                        i += 1
+                        if(i == len(parameters)):
+                            self.sendTextMessage(schid, targetMode, "[color=#bb0000]Syntax error: Found opening \" but no closing \", [b]@'{}'[/b][/color]".format(fromName), targetID)
+                            return
+                    joinedParam = " ".join(parameters[startAt:i+1])
+                    joinedParam = joinedParam[1:-1]
+
+                    for index in range(startAt, i+1):
+                        parameters.pop(startAt)
+
+                    parameters.insert(startAt, joinedParam)
+
+                i += 1
+         */
     }
 }

@@ -17,8 +17,13 @@ namespace TeamspeakToolMvvm.Logic.Misc
         }
 
 
-        public static string FormatTimeSpan(TimeSpan ts) {
-            return ts.ToString();
+        public static string FormatTimeSpanShort(TimeSpan ts) {
+            int seconds = ts.Seconds;
+            if (ts.TotalSeconds < 1) {
+                seconds = 1;
+            }
+
+            return $"{(int)ts.TotalHours:00}:{ts.Minutes:00}:{seconds:00}";
         }
     }
 }

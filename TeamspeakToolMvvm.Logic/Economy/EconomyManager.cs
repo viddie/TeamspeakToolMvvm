@@ -40,22 +40,24 @@ namespace TeamspeakToolMvvm.Logic.Economy {
 
             Parent.LogMessage("Triggered eco tick");
 
-            if (Settings.LastTick != null) {
-                DateTime dueTime = Settings.LastTick + TimeSpan.FromSeconds(Settings.EcoTickTimeSeconds);
+            if (Settings.EcoLastTick != null) {
+                DateTime dueTime = Settings.EcoLastTick + TimeSpan.FromSeconds(Settings.EcoTickTimeSeconds);
                 if (dueTime > DateTime.Now) {
                     EcoTimer.Change(dueTime - DateTime.Now, TimeSpan.FromMilliseconds(-1));
                     return;
                 }
             }
 
-            foreach (Client client in Parent.Client.GetClientList(fromCache:false)) {
+            List<Client> clientListCopy = new List<Client>(Parent.Client.GetClientList(fromCache: false));
+
+            foreach (Client client in clientListCopy) {
                 if (GetBalanceForUser(client.UniqueId) < Settings.EcoSoftBalanceLimit) {
                     ChangeBalanceForUser(client.UniqueId, Settings.EcoTickGain);
                 }
             }
 
             //Implicitly saves the file
-            Settings.LastTick = DateTime.Now;
+            Settings.EcoLastTick = DateTime.Now;
             EcoTimer.Change(TimeSpan.FromSeconds(Settings.EcoTickTimeSeconds), TimeSpan.FromMilliseconds(-1));
         }
 

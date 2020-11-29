@@ -27,7 +27,12 @@ namespace TeamspeakToolMvvm.Wpf
         public MainWindow()
         {
             InitializeComponent();
+            ReSnapWindow();
             Messenger.Default.Register<AddLogMessage>(this, HandleAddLogMessage);
+        }
+
+        private void ReSnapWindow() {
+
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e) {

@@ -70,8 +70,8 @@
             <Label Grid.Row="0" Grid.Column="4" Content="Door Enabled:" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" />
             <controls:IconLabel Grid.Row="0" Grid.Column="5" Icon="{Binding Settings.DoorChannelEnabled, Converter={StaticResource BooleanToIconConverter}}" Margin="5,0,0,0" HorizontalContentAlignment="Left" VerticalContentAlignment="Center" />
 
-            <Label Grid.Row="1" Grid.Column="4" Content="Door Channel:" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" />
-            <Label Grid.Row="1" Grid.Column="5" Content="{Binding Settings.DoorChannelName}" HorizontalContentAlignment="Left" VerticalContentAlignment="Center" />
+            <Label Grid.Row="1" Grid.Column="2" Content="Last Roulette:" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" />
+            <Label Grid.Row="1" Grid.Column="3" Grid.ColumnSpan="3" Content="{Binding LastRouletteResult}" HorizontalContentAlignment="Left" VerticalContentAlignment="Center" />
         </Grid>
 
         <Grid Grid.Row="2">

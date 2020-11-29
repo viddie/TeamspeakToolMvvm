@@ -130,6 +130,42 @@ namespace TeamspeakToolMvvm.Logic.Misc {
             return double.Parse(line);
         }
 
+        //./ffprobe.exe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 playsounds/jqmm1xG2HcM.webm
+        public static List<Tuple<string, string>> GetAudioDevices() {
+            ProcessStartInfo psi = new ProcessStartInfo() {
+                FileName = "mpv.exe",
+                Arguments = $"-audio-device=help",
+                WindowStyle = ProcessWindowStyle.Hidden,
+                RedirectStandardOutput = true,
+                UseShellExecute = false,
+            };
+            Process p = Process.Start(psi);
+            string input = p.StandardOutput.ReadToEnd();
+            input = input.Trim();
+            p.WaitForExit();
+
+            string delimiter = "detected audio devices:";
+            int startIndex = input.IndexOf(delimiter);
+            input = input.Substring(startIndex + delimiter.Length);
+            input = input.Trim();
+
+            List<Tuple<string, string>> toRet = new List<Tuple<string, string>>();
+
+            string[] lines = input.Split(new char[] { '\n' });
+            foreach (string line in lines) {
+                string lineTrimmed = line.Trim();
+                string[] deviceInfo = lineTrimmed.Split(new string[] { "'" }, StringSplitOptions.RemoveEmptyEntries);
+
+                string deviceId = deviceInfo[0];
+                string deviceName = deviceInfo[1].Trim();
+                deviceName = deviceName.Substring(1, deviceName.Length - 2);
+
+                toRet.Add(Tuple.Create(deviceId, deviceName));
+            }
+
+            return toRet;
+        }
+
 
         public static bool IsYouTubeVideoUrl(string url) {
             if (url.ToLower().StartsWith("[url]")) {

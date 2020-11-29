@@ -19,10 +19,13 @@ namespace TeamspeakToolMvvm.Logic.Groups {
             [typeof(CoinFlipCommand)] = true,
             [typeof(DailyCommand)] = true,
             [typeof(HelpCommand)] = true,
+            [typeof(ReplayCommand)] = true,
             [typeof(RollCommand)] = true,
             [typeof(RouletteCommand)] = true,
             [typeof(SayCommand)] = true,
+            [typeof(ScrapeCommand)] = true,
             [typeof(TeamsCommand)] = true,
+            [typeof(TickCommand)] = true,
             [typeof(TimeCommand)] = true,
             [typeof(YouTubeCommand)] = true,
         };

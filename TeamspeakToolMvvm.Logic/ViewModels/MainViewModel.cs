@@ -22,18 +22,22 @@ using TeamspeakToolMvvm.Logic.Misc;
 using TeamspeakToolMvvm.Logic.Groups;
 using TeamspeakToolMvvm.Logic.Economy;
 using System.Collections.ObjectModel;
+using HtmlAgilityPack;
 
 namespace TeamspeakToolMvvm.Logic.ViewModels {
     public class MainViewModel : ViewModelBase {
 
         #region Properties
         public MySettings Settings { get; set; }
+        public AoeEloSettings EloSettings { get; set; }
         public TeamspeakClient Client { get; set; }
         public Timer KeepAliveTimer { get; set; }
         public int KeepAliveSeconds { get; set; } = 180;
 
         public ChatCommandHandler CommandHandler { get; set; }
         public RateLimiter RateLimiter { get; set; }
+
+        public List<string> SelfMessagesToIgnore { get; set; } = new List<string>();
         #endregion
 
         #region View Properties
@@ -49,6 +53,8 @@ namespace TeamspeakToolMvvm.Logic.ViewModels {
         public List<CommandModel> GlobalCommands { get; set; }
         public List<CommandModel> ClientCommands { get; set; }
         public List<CommandModel> ChannelCommands { get; set; }
+
+        public string LastRouletteResult { get; set; } = "";
 
         public ObservableCollection<string> LogTexts { get; set; } = new ObservableCollection<string>();
         #endregion
@@ -79,6 +85,12 @@ namespace TeamspeakToolMvvm.Logic.ViewModels {
             Settings.SaveTimerDelay = 1000;
             #endregion
 
+            #region Aoe Elo Settings
+            EloSettings = AoeEloSettings.Instance;
+            EloSettings.Load<AoeEloSettings>("aoe_elos.json");
+            EloSettings.SaveTimerDelay = 1000;
+            #endregion
+
             CommandHandler = new ChatCommandHandler(this);
             RateLimiter = new RateLimiter(Settings);
             AccessManager.Instance = new AccessManager(this);
@@ -96,6 +108,7 @@ namespace TeamspeakToolMvvm.Logic.ViewModels {
                 new CommandModel() { DisplayName = "Open chat with yourself", Command = new RelayCommand(OpenChatWithMyself), IconName = "Commenting" },
                 new CommandModel() { DisplayName = "Toggle no-move", Command = new RelayCommand(ToggleNoMove), IconName = "Ban" },
                 new CommandModel() { DisplayName = "Toggle door", Command = new RelayCommand(ToggleDoorChannel), IconName = "ArrowRight" },
+                new CommandModel() { DisplayName = "Test Command", Command = new RelayCommand(TestCommand), IconName = "Wrench" },
             };
 
             RegisterMessages();
@@ -206,6 +219,10 @@ namespace TeamspeakToolMvvm.Logic.ViewModels {
         public void LogMessage(string text) {
             MessengerInstance.Send(new AddLogMessage(text));
         }
+
+        public void IgnoreSelfTextMessage(string text) {
+            SelfMessagesToIgnore.Add(text);
+        }
         #endregion
 
         #region TS3 Actions
@@ -236,7 +253,11 @@ namespace TeamspeakToolMvvm.Logic.ViewModels {
         public void ToggleDoorChannel() {
             Settings.DoorChannelEnabled = !Settings.DoorChannelEnabled;
         }
-        
+
+        public void TestCommand() {
+            LogMessage("Executing test command...");
+        }
+
         #endregion
 
 
@@ -262,7 +283,7 @@ namespace TeamspeakToolMvvm.Logic.ViewModels {
             List<string> namesList = otherExcludeNames.Split(new char[] { ',' }).ToList();
 
             Client otherClient = Client.GetClientById(evt.ClientId);
-            if (namesList.Contains(otherClient.Nickname)) {
+            if (otherClient != null && namesList.Contains(otherClient.Nickname)) {
                 Client.SendCommand($"clientmove cid={otherClient.ChannelId} clid={otherClient.Id}");
                 LogMessage($"No-Move triggered for '{otherClient.Nickname}'");
                 Settings.StatisticMovesDenied++;
@@ -302,6 +323,17 @@ namespace TeamspeakToolMvvm.Logic.ViewModels {
             (MyClientId, MyChannelId) = Client.GetWhoAmI();
             return MyChannelId;
         }
+
+
+        public void RefreshClientList() {
+            Client.GetClientList(false);
+
+            foreach (Client client in Client.GetClientList()) {
+                Settings.LastSeenUsernames[client.UniqueId] = client.Nickname;
+            }
+
+            Settings.DelayedSave();
+        }
         #endregion
 
 
@@ -316,11 +348,18 @@ namespace TeamspeakToolMvvm.Logic.ViewModels {
                 MyChannelId = evt.ToChannelId;
             }
 
-            Client.GetClientList(false);
+            RefreshClientList();
         }
 
         public void OnTextMessageEvent(Event e) {
             NotifyTextMessageEvent evt = (NotifyTextMessageEvent)e;
+
+            int myId = GetMyClientId();
+
+            if (evt.InvokerId == myId && SelfMessagesToIgnore.Contains(evt.Message)) {
+                SelfMessagesToIgnore.Remove(evt.Message);
+                return;
+            }
 
             CommandHandler.HandleTextMessage(evt);
 

@@ -114,6 +114,10 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
             Random r = new Random();
             double chosenValue = r.NextDouble();
 
+            string resultLogMsg = $"({chosenValue:0.#####} | win {winChancePercent:0.#####} | jackpot {jackpotChancePercent:0.#####})";
+            Parent.LastRouletteResult = resultLogMsg;
+            Parent.LogMessage($"Roulette result: {resultLogMsg}");
+
             int changeBalanceAmount;
             string message;
             string ptsUnit = Settings.EcoPointUnitName;
