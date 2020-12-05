@@ -63,7 +63,7 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
         public uint InputFromElo = uint.MaxValue;
         public uint InputToElo = uint.MaxValue;
 
-        public AoeEloSettings Elos { get; set; }
+        public AoeSettings Elos { get; set; }
 
         public override bool IsValidCommandSyntax(string command, List<string> parameters) {
             if (parameters.Count == 0) return true;
@@ -142,7 +142,7 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
         public override void HandleCommand(NotifyTextMessageEvent evt, string command, List<string> parameters, Action<string> messageCallback) {
             lock (LockObject) {
                 if (IsBusy) {
-                    messageCallback.Invoke(ColorCoder.Error("The fetcher is busy, try again when the current request has completed..."));
+                    messageCallback.Invoke(ColorCoder.ErrorBright("The fetcher is busy, try again when the current request has completed..."));
                     return;
                 }
                 IsBusy = true;
@@ -274,7 +274,7 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
                 AoeLeaderboardResponse parsed = JsonConvert.DeserializeObject<AoeLeaderboardResponse>(content);
 
                 foreach (AoePlayer aoePlayer in parsed.Leaderboard) {
-                    Elos.AllPlayersElos[mode].Add(Tuple.Create(aoePlayer.Rating, aoePlayer.SteamId));
+                    Elos.AllPlayersElos[mode].Add(Tuple.Create(aoePlayer.Rating.Value, aoePlayer.SteamId));
                 }
 
                 Parent.LogMessage($"[*] <{mode}>: Loaded rank #{startPosition} - #{startPosition + parsed.Count}");

@@ -358,3 +358,9 @@ MigrationBackup/
 .ionide/
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudio
+
+
+# My Stuff
+ffmpeg.exe
+ffprobe.exe
+mpv.exe

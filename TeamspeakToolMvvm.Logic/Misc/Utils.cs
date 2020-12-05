@@ -10,10 +10,17 @@ namespace TeamspeakToolMvvm.Logic.Misc
 {
     public static class Utils
     {
+        public static string GetProjectFilePath(string fileName, string folder=null) {
+            string baseFolder = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
 
-        public static string GetProjectFilePath(string fileName) {
-            string folder = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
-            return Path.Combine(folder, fileName);
+            if (folder != null) {
+                baseFolder = Path.Combine(baseFolder, folder);
+                if (!Directory.Exists(baseFolder)) {
+                    Directory.CreateDirectory(baseFolder);
+                }
+            }
+
+            return Path.Combine(baseFolder, fileName);
         }
 
 

@@ -43,6 +43,12 @@ namespace TeamspeakToolMvvm.Logic.ViewModels
                 new BooleanSetting("Enabled", "When the door channel is enabled, any client joining the door channel will be kicked from the server", nameof(SettingsInstance.DoorChannelEnabled)),
                 new StringSetting("Channel Name", null, nameof(SettingsInstance.DoorChannelName)),
                 new StringSetting("Kick Message", null, nameof(SettingsInstance.DoorMessage)),
+
+                new TitleSetting("Immediate Chat Reaction") { Type = TitleType.H2 },
+                new BooleanSetting("General Enabled", null, nameof(SettingsInstance.ImmediateGeneralEnabled)),
+                new BooleanSetting("General Display Description", null, nameof(SettingsInstance.ImmediateGeneralDescriptionEnabled)),
+                new BooleanSetting("General Display Keywords", null, nameof(SettingsInstance.ImmediateGeneralKeywordsEnabled)),
+                new BooleanSetting("Youtube Enabled", null, nameof(SettingsInstance.ImmediateYoutubeEnabled)),
                 #endregion
 
                 #region ChatCommands
@@ -58,8 +64,13 @@ namespace TeamspeakToolMvvm.Logic.ViewModels
 
                 new TitleSetting("Playsounds") { Type = TitleType.H2 },
                 new BooleanSetting("Enabled", "Playsounds allow users in your TS server to play sounds via your audio device", nameof(SettingsInstance.PlaysoundsEnabled)),
+                new StringSetting("Output Audio Device", "Use the command '!playsounds list-devices' to find your desired audio device", nameof(SettingsInstance.PlaysoundsSoundDevice)),
                 new BoundedIntSetting("YouTube Max Duration", null, nameof(SettingsInstance.PlaysoundsYoutubeMaxVideoDurationSeconds)) { Unit = "Seconds", Min = 0 },
                 new BoundedDoubleSetting("YouTube Max File Size", null, nameof(SettingsInstance.PlaysoundsYoutubeMaxVideoSizeMb)) { Unit = "MB", Min = 0 },
+                new BoundedIntSetting("Sounds Per Page", "To let your users navigate all available sounds without flooding the chat, a pagination is built into the system. This value decides how many sounds should be displayed per page in the pagination", nameof(SettingsInstance.PlaysoundsSoundsPerPage)) { Unit = "Sounds/Page", Min = 1 },
+                new BoundedDoubleSetting("Cooldown Duration Multiplier", "The cooldown per playsound used will be set to the duration of the playsound in seconds multiplied by this value", nameof(SettingsInstance.PlaysoundsDurationCooldownMultiplier)) { Unit = "x", Min = 0 },
+
+                
 
                 new TitleSetting("Daily") { Type = TitleType.H2 },
                 new BooleanSetting("Enabled", "Daily rewards allow your users to gain {Daily Reward} points each day for remembering this command!", nameof(SettingsInstance.DailyEnabled)),

@@ -38,7 +38,7 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
 
             int currentBalance = EconomyManager.GetBalanceForUser(evt.InvokerUniqueId);
             if (currentBalance + Settings.DailyReward > Settings.EcoSoftBalanceLimit) {
-                messageCallback.Invoke(ColorCoder.Error($"You would have more than {ColorCoder.Currency(Settings.EcoSoftBalanceLimit, Settings.EcoPointUnitName)}, {ColorCoder.Username(evt.InvokerName)}. Your balance: {ColorCoder.Currency(currentBalance, Settings.EcoPointUnitName)} |  Daily reward: {ColorCoder.Currency(Settings.DailyReward, Settings.EcoPointUnitName)}"));
+                messageCallback.Invoke(ColorCoder.ErrorBright($"You would have more than {ColorCoder.Currency(Settings.EcoSoftBalanceLimit, Settings.EcoPointUnitName)}, {ColorCoder.Username(evt.InvokerName)}. Your balance: {ColorCoder.Currency(currentBalance, Settings.EcoPointUnitName)} |  Daily reward: {ColorCoder.Currency(Settings.DailyReward, Settings.EcoPointUnitName)}"));
                 return;
             }
 

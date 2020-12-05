@@ -99,18 +99,21 @@ namespace TeamspeakToolMvvm.Logic.Misc {
             p.WaitForExit();
         }
 
-        public static void PlayAudio(string file, double volume = 1, double speed = 1, double pitch = 1, string audioDevice = null) {
+        public static Process PlayAudio(string file, double volume = 1, double speed = 1, double pitch = 1, string audioDevice = null) {
             Console.WriteLine($"Playing audio: '{file}'");
 
             string audioDeviceParam = audioDevice == null ? "" : $"-audio-device={audioDevice}";
 
+            string volumeStr = volume.ToString().Replace(",", ".");
+            string speedStr = speed.ToString().Replace(",", ".");
+            string pitchStr = pitch.ToString().Replace(",", ".");
+
             ProcessStartInfo psi = new ProcessStartInfo() {
                 FileName = "mpv.exe",
-                Arguments = $"--af=volume={volume},scaletempo=scale={speed},rubberband=pitch-scale={pitch} {audioDeviceParam} {file}",
+                Arguments = $"--af=volume={volumeStr},scaletempo=scale={speedStr},rubberband=pitch-scale={pitchStr} {audioDeviceParam} {file}",
                 WindowStyle = ProcessWindowStyle.Hidden,
             };
-            Process p = Process.Start(psi);
-            p.WaitForExit();
+            return Process.Start(psi);
         }
 
         //./ffprobe.exe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 playsounds/jqmm1xG2HcM.webm
@@ -127,7 +130,7 @@ namespace TeamspeakToolMvvm.Logic.Misc {
             line = line.Trim();
             p.WaitForExit();
 
-            return double.Parse(line);
+            return double.Parse(line.Replace(".", ","));
         }
 
         //./ffprobe.exe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 playsounds/jqmm1xG2HcM.webm

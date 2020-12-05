@@ -71,7 +71,7 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
                 ratioStr = ColorCoder.ColorText(Color.Red, ratioStr);
             }
 
-            Parent.Settings.StatisticYouTubeLinksFetched++;
+            Parent.StatSettings.YouTubeLinksFetched++;
 
             string response = $"{yt} ⇒ [url={url}]{title}[/url] [{duration}] from [B]{author}[/B] | {likes} | {dislikes} | {ratioStr}";
 

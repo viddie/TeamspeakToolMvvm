@@ -11,9 +11,24 @@ namespace TeamspeakToolMvvm.Logic.Misc {
             return $"[color=#{color.AsHex}]{text}[/color]";
         }
 
-        public static string Error(object text) {
+        public static string ColorPivotPercent(double val, double pivot, string valStr=null) {
+            valStr = valStr ?? $"{val:0.##}%";
+            return val < 0 ? ColorCoder.ErrorBright(valStr) : val > pivot ? ColorCoder.SuccessDim(valStr) : $"{valStr}";
+        }
+        public static string ColorPivot(int val, int pivot) {
+            return val < pivot ? ColorCoder.ErrorBright(val) : val > pivot ? ColorCoder.SuccessDim(val) : $"{val}";
+        }
+
+        public static string ErrorBright(object text) {
             return $"[color=#{Color.LightRed.AsHex}]{text}[/color]";
         }
+        public static string Error(object text) {
+            return $"[color=#{Color.Red.AsHex}]{text}[/color]";
+        }
+        public static string ErrorDim(object text) {
+            return $"[color=#{Color.DarkRed.AsHex}]{text}[/color]";
+        }
+        
         public static string Success(object text) {
             return $"[color=#{Color.Green.AsHex}]{text}[/color]";
         }

@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using TeamspeakToolMvvm.Logic.ChatCommands;
 using TeamspeakToolMvvm.Logic.Groups;
+using TeamspeakToolMvvm.Logic.Models;
 
 namespace TeamspeakToolMvvm.Logic.Config
 {
@@ -54,6 +55,14 @@ namespace TeamspeakToolMvvm.Logic.Config
         #endregion
 
 
+        #region Immediate Chat Reaction
+        public bool ImmediateYoutubeEnabled { get; set; } = true;
+        public bool ImmediateGeneralEnabled { get; set; } = true;
+        public bool ImmediateGeneralDescriptionEnabled { get; set; } = false;
+        public bool ImmediateGeneralKeywordsEnabled { get; set; } = false;
+        #endregion
+
+
         #region Chat Commands
         public bool ChatCommandsEnabled { get; set; } = true;
         public string ChatCommandPrefix { get; set; } = "!";
@@ -67,23 +76,6 @@ namespace TeamspeakToolMvvm.Logic.Config
         #endregion
 
 
-        #region Statistics
-        public int StatisticMovesDenied { get; set; } = 0;
-
-        public int StatisticDoorUsed { get; set; } = 0;
-
-        public int StatisticYouTubeLinksFetched { get; set; } = 0;
-
-        public int StatisticCoinflipHeads { get; set; } = 0;
-        public int StatisticCoinflipTails { get; set; } = 0;
-
-        public int StatisticRoulettePointsWon { get; set; } = 0;
-        public int StatisticRoulettePointsLost { get; set; } = 0;
-        public int StatisticRouletteJackpots { get; set; } = 0;
-        public int StatisticRouletteGames { get; set; } = 0;
-        #endregion
-
-
         #region Playsounds
         public bool PlaysoundsEnabled { get; set; } = true;
         public string PlaysoundsSoundDevice { get; set; } = null;
@@ -93,13 +85,13 @@ namespace TeamspeakToolMvvm.Logic.Config
         public Dictionary<string, Dictionary<string, double>> PlaysoundsModifiers { get; set; } = new Dictionary<string, Dictionary<string, double>>() {
             ["nc"] = new Dictionary<string, double>() {
                 [PlaysoundsCommand.ModifierNameVolume] = 1.0,
-                [PlaysoundsCommand.ModifierNameSpeed] = 1.20,
-                [PlaysoundsCommand.ModifierNamePitch] = 1.20,
+                [PlaysoundsCommand.ModifierNameSpeed] = 1.25,
+                [PlaysoundsCommand.ModifierNamePitch] = 1.25,
             },
             ["demon"] = new Dictionary<string, double>() {
-                [PlaysoundsCommand.ModifierNameVolume] = 1.1,
-                [PlaysoundsCommand.ModifierNameSpeed] = 0.8,
-                [PlaysoundsCommand.ModifierNamePitch] = 0.8,
+                [PlaysoundsCommand.ModifierNameVolume] = 1.2,
+                [PlaysoundsCommand.ModifierNameSpeed] = 0.7,
+                [PlaysoundsCommand.ModifierNamePitch] = 0.7,
             },
             ["earrape"] = new Dictionary<string, double>() {
                 [PlaysoundsCommand.ModifierNameVolume] = 10.0,
@@ -107,6 +99,8 @@ namespace TeamspeakToolMvvm.Logic.Config
                 [PlaysoundsCommand.ModifierNamePitch] = 1.0,
             },
         };
+        public List<Playsound> PlaysoundsSavedSounds { get; set; } = new List<Playsound>();
+        public double PlaysoundsDurationCooldownMultiplier { get; set; } = 3;
         #endregion
 
 

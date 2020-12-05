@@ -65,7 +65,7 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
             if (action == "add" || action == "remove") {
                 group = AccessManager.GetGroupByName(parameters[2]);
                 if (group == null) {
-                    messageCallback.Invoke(ColorCoder.Error($"The group named '{ColorCoder.Bold(parameters[2])}' was not found"));
+                    messageCallback.Invoke(ColorCoder.ErrorBright($"The group named '{ColorCoder.Bold(parameters[2])}' was not found"));
                     return;
                 }
             }
@@ -75,7 +75,7 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
                 if (success) {
                     messageCallback.Invoke(ColorCoder.Success($"{ColorCoder.Username(target.Nickname)} was added to the group '{ColorCoder.Bold(group.DisplayName)}'"));
                 } else {
-                    messageCallback.Invoke(ColorCoder.Error($"{ColorCoder.Username(target.Nickname)} is already in the group '{ColorCoder.Bold(group.DisplayName)}'"));
+                    messageCallback.Invoke(ColorCoder.ErrorBright($"{ColorCoder.Username(target.Nickname)} is already in the group '{ColorCoder.Bold(group.DisplayName)}'"));
                 }
 
             } else if (action == "remove") {
@@ -83,7 +83,7 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
                 if (success) {
                     messageCallback.Invoke(ColorCoder.Success($"{ColorCoder.Username(target.Nickname)} was removed from the group '{ColorCoder.Bold(group.DisplayName)}'"));
                 } else {
-                    messageCallback.Invoke(ColorCoder.Error($"{ColorCoder.Username(target.Nickname)} was not in the group '{ColorCoder.Bold(group.DisplayName)}'"));
+                    messageCallback.Invoke(ColorCoder.ErrorBright($"{ColorCoder.Username(target.Nickname)} was not in the group '{ColorCoder.Bold(group.DisplayName)}'"));
                 }
 
             } else if (action == "list") {

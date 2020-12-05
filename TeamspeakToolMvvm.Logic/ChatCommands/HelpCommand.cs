@@ -54,7 +54,7 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
 
                         try {
                             if (!chatCommand.CanExecute(evt.InvokerUniqueId, requestedCommand, parameters)) {
-                                messageCallback.Invoke(ColorCoder.Error($"You don't have access to view the help of this command"));
+                                messageCallback.Invoke(ColorCoder.ErrorBright($"You don't have access to view the help of this command"));
                                 break;
                             }
                             if (!chatCommand.IsValidCommandSyntax(requestedCommand, parameters)) {

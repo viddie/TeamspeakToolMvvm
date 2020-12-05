@@ -1,13 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TeamspeakToolMvvm.Logic.Config;
+using TeamspeakToolMvvm.Logic.Economy;
 using TeamspeakToolMvvm.Logic.Exceptions;
 using TeamspeakToolMvvm.Logic.Groups;
 using TeamspeakToolMvvm.Logic.Misc;
+using TeamspeakToolMvvm.Logic.Models;
 using TSClient.Events;
+using TSClient.Models;
 
 namespace TeamspeakToolMvvm.Logic.ChatCommands {
 
@@ -25,7 +30,7 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
     // === Manage Parameters ===
     // These parameters don't have a syntax check yet
     // 
-    // !ps add-file <name> <price> <filename>                             - Saves a playsound by local file
+    // !ps add-file <name> <price> <filename> [source]                    - Saves a playsound by local file
     // !ps add-yt <name> <price> <youtube-url> [startTime] [endTime]      - Saves a playsound by youtube video with time interval
     // !ps remove <name>                                                  - Removes a saved playsound by name
 
@@ -44,11 +49,27 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
             [ModifierNamePitch] = Tuple.Create(0.1, 3.0),
         };
 
+        public static string SoundsFolder = "playsounds";
+        public static List<string> AdminCommands = new List<string>() {
+            "add-file", "add-yt", "remove", "add-modifier", "list-devices", "stop-sounds"
+        };
+
+        public static List<Process> AllStartedSoundProcesses = new List<Process>();
+
+
+
 
         public override string CommandPrefix { get; set; } = "playsounds";
         public override List<string> CommandAliases { get; set; } = new List<string>() { "ps" };
         public override bool HasExceptionWhiteList { get; set; } = false;
 
+        public bool IsAdministrativeCommand = false;
+        public string AdminAction;
+        public string AdminPlaysoundName;
+        public uint AdminPlaysoundPrice;
+        public string AdminPlaysoundFileName;
+        public bool AdminPlaysoundFileNameIsYoutube = false;
+        public string AdminPlaysoundSource;
 
         public bool HasRequestedPagination = false;
         public uint RequestedPage = uint.MaxValue;
@@ -61,9 +82,78 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
         public Dictionary<string, double> ManualModifiers;
 
         public override bool IsValidCommandSyntax(string command, List<string> parameters) {
-            if (parameters.Count == 0) return true;
+            if (parameters.Count == 0) {
+                HasRequestedPagination = true;
+                RequestedPage = 1;
+                return true;
+            }
             if (parameters[0].StartsWith("-mods")) return true;  //Mods list
-            if (parameters[0] == "add-file" || parameters[0] == "add-yt" || parameters[0] == "remove" || parameters[0] == "add-modifier") return true;
+
+            if (AdminCommands.Contains(parameters[0])) {
+                AdminAction = parameters[0];
+                parameters = parameters.Skip(1).ToList();
+
+                if (parameters.Count == 0) {
+                    if (AdminAction == "stop-sounds" || AdminAction == "list-devices") {
+                        IsAdministrativeCommand = true;
+                        return true;
+                    }
+                    return false;
+                }
+
+                IsAdministrativeCommand = true;
+                AdminPlaysoundName = parameters[0];
+                parameters = parameters.Skip(1).ToList();
+
+
+
+                if (AdminAction == "add-file" || AdminAction == "add-yt") {
+                    if (!uint.TryParse(parameters[0], out AdminPlaysoundPrice)) {
+                        throw new CommandParameterInvalidFormatException(3, parameters[0], "price", typeof(uint), GetUsageSyntax(command, new List<string>()));
+                    }
+                    parameters = parameters.Skip(1).ToList();
+
+
+                    AdminPlaysoundFileName = parameters[0];
+                    parameters = parameters.Skip(1).ToList();
+
+                    if (AdminAction == "add-yt") {
+                        AdminPlaysoundFileNameIsYoutube = true;
+                        AdminPlaysoundSource = AdminPlaysoundFileName;
+                        if (parameters.Count >= 1) {
+                            try {
+                                YoutubeStartTime = GetYoutubeTimeInSeconds(parameters[0]);
+                            } catch (Exception) {
+                                throw new CommandParameterInvalidFormatException(5, parameters[0], "startTime", typeof(uint), GetUsageSyntax(command, new List<string>()));
+                            }
+                        }
+                        if (parameters.Count == 2) {
+                            try {
+                                YoutubeEndTime = GetYoutubeTimeInSeconds(parameters[1]);
+                            } catch (Exception) {
+                                throw new CommandParameterInvalidFormatException(6, parameters[1], "endTime", typeof(uint), GetUsageSyntax(command, new List<string>()));
+                            }
+                        }
+                    } else {
+                        if (parameters.Count > 0) {
+                            AdminPlaysoundSource = parameters[0];
+                        }
+                    }
+
+                } else if (AdminAction == "remove" && parameters.Count != 0) {
+                    return false;
+
+                } else if (AdminAction == "add-modifier") {
+                    if (parameters.Count == 0) return false;
+
+                    ManualModifiers = ParseModifierParameters(parameters);
+                }
+
+                return true;
+            }
+
+
+
 
             if (parameters[0].StartsWith("-")) { //Remove mods from parameters
                 SelectedModifier = parameters[0].Substring(1);
@@ -116,25 +206,42 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
                 }
 
             } else if(parameters.Count >= 1) {
-                ManualModifiers = new Dictionary<string, double>();
-                for (int i = 0; i < parameters.Count; i++) {
-                    if (!parameters[i].Contains("=")) return false;
-                    string[] split = parameters[i].Split(new char[] { '=' });
-                    string modName = split[0];
-                    string modValue = split[1].Replace(".", ",");
-
-                    if (!ModifierRanges.ContainsKey(modName)) return false;
-                    if (!double.TryParse(modValue, out double modValueParsed)) return false;
-
-                    ManualModifiers.Add(modName, modValueParsed);
-                }
+                ManualModifiers = ParseModifierParameters(parameters);
             }
 
 
             return true;
         }
 
+        public static Dictionary<string, double> ParseModifierParameters(List<string> parameters) {
+            Dictionary<string, double> toRet = new Dictionary<string, double>();
+            for (int i = 0; i < parameters.Count; i++) {
+                if (!parameters[i].Contains("=")) return toRet;
+                string[] split = parameters[i].Split(new char[] { '=' });
+                string modName = split[0];
+                string modValue = split[1].Replace(".", ",");
+
+                if (!ModifierRanges.ContainsKey(modName)) return toRet;
+                if (!double.TryParse(modValue, out double modValueParsed)) return toRet;
+
+                toRet.Add(modName, modValueParsed);
+            }
+
+            return toRet;
+        }
+
         public override string GetUsageSyntax(string command, List<string> parameters) {
+            if (parameters.Count > 0) {
+                if (parameters[0] == "add-file") {
+                    return $"{command} add-file <name> <price> <filename>";
+                } else if (parameters[0] == "add-yt") {
+                    return $"{command} add-yt <name> <price> <youtube-url> [startTime] [endTime]";
+                } else if (parameters[0] == "remove") {
+                    return $"{command} remove <name>";
+                } else if (parameters[0] == "add-modifier") {
+                    return $"{command} add-modifier <name> <speed|pitch|volume>=<value>...";
+                }
+            }
             return command;
         }
 
@@ -144,7 +251,7 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
 
         public override bool CanExecuteSubCommand(string uniqueId, string command, List<string> parameters) {
             if (parameters.Count > 0 &&
-                (parameters[0] == "add-file" || parameters[0] == "add-yt" || parameters[0] == "remove" || parameters[0] == "add-modifier") &&
+                (AdminCommands.Contains(parameters[0])) &&
                 !AccessManager.UserHasAccessToSubCommand(uniqueId, "command:playsounds_manage")) {
                 return false;
             }
@@ -152,17 +259,247 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
         }
 
         public override void HandleCommand(NotifyTextMessageEvent evt, string command, List<string> parameters, Action<string> messageCallback) {
-            string mod = SelectedModifier ?? "<none>";
-            string modCost = SelectedModifier == null ? "1.0" : GetPriceFactorForModifiers(Settings.PlaysoundsModifiers[SelectedModifier]).ToString();
-            string source = SoundSource ?? "<none>";
-            string manualModifiers = ManualModifiers == null ? "<none>" : string.Join(", ", ManualModifiers.Keys.ToList());
+            // +----------------------+
+            // | Administrative Block |
+            // +----------------------+
+            if (IsAdministrativeCommand) {
+                if (AdminAction == "add-file") {
+                    AddPlaysound(AdminPlaysoundName, AdminPlaysoundPrice, AdminPlaysoundFileName, AdminPlaysoundSource, messageCallback);
 
-            messageCallback.Invoke($"Playsound: (HasRequestedPagination: {HasRequestedPagination}, RequestedPage: {RequestedPage}, Modifier: {mod}, ModifierPriceFactor: {modCost}, SoundSource: {source}, SourceIsYoutube: {SourceIsYoutube}, YoutubeStartSecs: {YoutubeStartTime}, YoutubeEndSecs: {YoutubeEndTime}, ManualModifiers: {manualModifiers}, ManualModifierPriceFactor: {GetPriceFactorForModifiers(ManualModifiers)})");
+                } else if (AdminAction == "add-yt") {
 
-            if (parameters[0] == "add-yt") {
-                string devices = string.Join("\n\t", AudioHelper.GetAudioDevices());
-                messageCallback.Invoke($"All audio devices:\n\t{devices}");
+                } else if (AdminAction == "remove") {
+                    RemovePlaysound(AdminPlaysoundName, messageCallback);
+
+                } else if (AdminAction == "add-modifier") {
+
+                } else if (AdminAction == "list-devices") {
+                    string devices = string.Join("\n\t", AudioHelper.GetAudioDevices());
+                    messageCallback.Invoke($"All audio devices:\n\t{devices}");
+
+                } else if (AdminAction == "stop-sounds") {
+                    int killed = 0;
+                    foreach (Process p in AllStartedSoundProcesses) {
+                        if (!p.HasExited) {
+                            p.Kill();
+                            killed++;
+                        }
+                    }
+                    AllStartedSoundProcesses.Clear();
+
+                    messageCallback.Invoke(ColorCoder.ErrorBright($"Killed {ColorCoder.Bold($"'{killed}'")} audio process(es)"));
+                }
+                return;
             }
+
+
+
+            // +----------------------+
+            // |      Pagination      |
+            // +----------------------+
+            // 66 items a 10 items per page = 7 pages (10, 10, 10, 10, 10, 10, 6)
+            // page = 3
+            // skip = 30 values
+            // take = 
+            if (HasRequestedPagination) {
+                int entriesPerPage = Settings.PlaysoundsSoundsPerPage;
+                int maxPage = (int) Math.Ceiling((double) Settings.PlaysoundsSavedSounds.Count / entriesPerPage);
+
+                if (RequestedPage < 1 || RequestedPage > maxPage) {
+                    messageCallback.Invoke($"The page '{RequestedPage}' is not in the valid range of [1 to {maxPage}]!");
+                    return;
+                }
+
+                int pageIndex = (int)RequestedPage - 1;
+                int skipValues = pageIndex * entriesPerPage;
+                List<Playsound> thisPage = Settings.PlaysoundsSavedSounds.OrderBy(ps => ps.BasePrice).ThenBy(ps => ps.Name).Skip(skipValues).Take(entriesPerPage).ToList();
+
+                string toPrint = "";
+                foreach (Playsound listSound in thisPage) {
+                    toPrint += $"\n'{listSound.Name}'\t({listSound.BasePrice} {Settings.EcoPointUnitName})";
+                }
+                toPrint += $"\n\t\t\t{ColorCoder.Bold($"-\tPage ({RequestedPage}/{maxPage})\t-")}";
+                toPrint += $"\n\nTo switch pages write '{Settings.ChatCommandPrefix}{command} <1/2/3/...>'";
+
+                messageCallback.Invoke(toPrint);
+
+                return;
+            }
+
+
+            if (evt.TargetMode != TSClient.Enums.MessageMode.Channel) {
+                messageCallback.Invoke(ColorCoder.Error("Playsounds can only be used in channel chats!"));
+                return;
+            }
+
+            Client myClient = Parent.Client.GetClientById(Parent.MyClientId);
+            if (Parent.Client.IsClientOutputMuted(myClient)) {
+                messageCallback.Invoke(ColorCoder.Error("This doesn't work right now..."));
+                return;
+            }
+            if (Parent.Client.IsClientInputMuted(myClient)) {
+                messageCallback.Invoke(ColorCoder.Error("Host is muted, playsound can still be played but others won't hear it (@Panther)"));
+            }
+
+            CooldownManager.ThrowIfCooldown(evt.InvokerUniqueId, "command:playsounds");
+
+
+            // +----------------------+
+            // |   Youtube fetching   |
+            // +----------------------+
+
+
+
+            // +-------------------------+
+            // | Playback of local files |
+            // +-------------------------+
+
+
+
+            if (!CheckValidModifiers(ManualModifiers, messageCallback)) {
+                return;
+            }
+
+            double speed = 1.0, pitch = 1.0, volume = 1.0;
+
+            if (SelectedModifier != null) {
+                Dictionary<string, double> modifiers = Settings.PlaysoundsModifiers[SelectedModifier];
+                if (modifiers.ContainsKey(ModifierNameSpeed)) {
+                    speed = modifiers[ModifierNameSpeed];
+                }
+                if (modifiers.ContainsKey(ModifierNamePitch)) {
+                    pitch = modifiers[ModifierNamePitch];
+                }
+                if (modifiers.ContainsKey(ModifierNameVolume)) {
+                    volume = modifiers[ModifierNameVolume];
+                }
+            }
+
+            if (ManualModifiers != null) {
+                if (ManualModifiers.ContainsKey(ModifierNameSpeed)) {
+                    speed = ManualModifiers[ModifierNameSpeed];
+                }
+                if (ManualModifiers.ContainsKey(ModifierNamePitch)) {
+                    pitch = ManualModifiers[ModifierNamePitch];
+                }
+                if (ManualModifiers.ContainsKey(ModifierNameVolume)) {
+                    volume = ManualModifiers[ModifierNameVolume];
+                }
+            }
+
+            Dictionary<string, double> actualModifiers = new Dictionary<string, double>() {
+                [ModifierNameSpeed] = speed,
+                [ModifierNamePitch] = pitch,
+                [ModifierNameVolume] = volume,
+            };
+
+            double priceFactor = GetPriceFactorForModifiers(actualModifiers);
+
+
+            Playsound sound;
+
+            if (SoundSource == "random") {
+                Random r = new Random();
+                sound = Settings.PlaysoundsSavedSounds.FindAll(ps => Math.Ceiling(ps.BasePrice * priceFactor) <= EconomyManager.GetBalanceForUser(evt.InvokerUniqueId)).OrderBy(ps => r.Next()).First();
+            } else {
+                List<Playsound> sounds = Settings.PlaysoundsSavedSounds.FindAll(ps => ps.Name.ToLower().Contains(SoundSource.ToLower()));
+                if (sounds.Count == 0) {
+                    messageCallback.Invoke(ColorCoder.Error($"A playsound with the name {ColorCoder.Bold($"'{SoundSource}'")} wasn't found!"));
+                    return;
+
+                } else if (sounds.Count > 1) {
+                    string soundsJoined = string.Join(", ", sounds.Select(ps => ColorCoder.Bold($"'{ps.Name}'")));
+                    messageCallback.Invoke(ColorCoder.Error($"Multiple sounds with {ColorCoder.Bold($"'{SoundSource}'")} in their name were found: ({soundsJoined})"));
+                    return;
+
+                } else {
+                    sound = sounds[0];
+                }
+            }
+
+
+            int modifiedPrice = Math.Max(1, (int)Math.Round(sound.BasePrice * priceFactor));
+
+            int balanceAfter = EconomyManager.GetUserBalanceAfterPaying(evt.InvokerUniqueId, modifiedPrice);
+            if (balanceAfter < 0) {
+                messageCallback.Invoke(ColorCoder.Error($"You dont have enough cash for that sound, {ColorCoder.Username(evt.InvokerName)}. Price: {ColorCoder.Currency(modifiedPrice, Settings.EcoPointUnitName)}, Needed: {ColorCoder.Currency(-balanceAfter, Settings.EcoPointUnitName)}"));
+                return;
+            }
+
+
+
+            string filePath = Utils.GetProjectFilePath($"{SoundsFolder}\\{sound.FileName}");
+            double duration = AudioHelper.GetAudioDurationInSeconds(filePath) / speed;
+            CooldownManager.SetCooldown(evt.InvokerUniqueId, "command:playsounds", CalculateCooldown(duration));
+
+            EconomyManager.ChangeBalanceForUser(evt.InvokerUniqueId, -modifiedPrice);
+
+            string usernameStr = ColorCoder.Username(evt.InvokerName);
+            string playingSoundStr = ColorCoder.SuccessDim($" Playing sound {ColorCoder.Bold($"'{sound.Name}'")}.");
+            string priceAdditionStr = priceFactor == 1 ? "" : $" x{priceFactor:0.##} = -{modifiedPrice}";
+            string balanceStr = $"Your balance: {EconomyManager.GetBalanceForUser(evt.InvokerUniqueId)} {Settings.EcoPointUnitName} {ColorCoder.ErrorBright($"(-{sound.BasePrice}{priceAdditionStr})")}";
+            messageCallback.Invoke($"{usernameStr} {playingSoundStr} {balanceStr}");
+
+            Process audioProcess = AudioHelper.PlayAudio(filePath, volume, speed, pitch, audioDevice:Settings.PlaysoundsSoundDevice);
+            AllStartedSoundProcesses.Add(audioProcess);
+        }
+
+        private bool CheckValidModifiers(Dictionary<string, double> manualModifiers, Action<string> messageCallback) {
+            if (manualModifiers == null) {
+                return true;
+            }
+
+            foreach (string currentMod in manualModifiers.Keys) {
+                if (!ModifierRanges.ContainsKey(currentMod)) {
+                    messageCallback.Invoke(ColorCoder.Error($"The modifier '{currentMod}' doesn't exist!"));
+                }
+                double manualVal = manualModifiers[currentMod];
+                double min = ModifierRanges[currentMod].Item1;
+                double max = ModifierRanges[currentMod].Item2;
+
+                if (manualVal < min || manualVal > max) {
+                    messageCallback.Invoke(ColorCoder.Error($"The modifier '{currentMod}' is not in the valid range of [{min} to {max}]!"));
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private void AddPlaysound(string name, uint price, string fileName, string source, Action<string> messageCallback) {
+            if (Settings.PlaysoundsSavedSounds.FirstOrDefault(ps => ps.Name == name) != null) {
+                messageCallback.Invoke(ColorCoder.Error($"A playsound with the name {ColorCoder.Bold($"'{name}'")} already exists!"));
+                return;
+            }
+
+            string filePath = Utils.GetProjectFilePath($"{SoundsFolder}\\{fileName}");
+            if(!File.Exists(filePath)) {
+                messageCallback.Invoke(ColorCoder.Error($"No file with the name {ColorCoder.Bold($"'{fileName}'")} was found in the playsounds folder!"));
+                return;
+            }
+
+            Settings.PlaysoundsSavedSounds.Add(new Playsound() {
+                Name = name,
+                FileName = fileName,
+                BasePrice = (int) price,
+                Source = source,
+            });
+            Settings.DelayedSave();
+
+            messageCallback.Invoke(ColorCoder.Success($"Added playsound {ColorCoder.Bold($"'{name}'")}!"));
+        }
+
+        private void RemovePlaysound(string name, Action<string> messageCallback) {
+            if (Settings.PlaysoundsSavedSounds.FirstOrDefault(ps => ps.Name == name) == null) {
+                messageCallback.Invoke(ColorCoder.Error($"A playsound with the name {ColorCoder.Bold($"'{name}'")} wasn't found!"));
+                return;
+            }
+
+            Playsound sound = Settings.PlaysoundsSavedSounds.First(ps => ps.Name == name);
+            Settings.PlaysoundsSavedSounds.Remove(sound);
+            Settings.DelayedSave();
+
+            messageCallback.Invoke(ColorCoder.Success($"Removed playsound {ColorCoder.Bold($"'{name}'")}!"));
         }
 
 
@@ -197,6 +534,10 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
             } else {
                 return uint.Parse(ytTime);
             }
+        }
+
+        public static TimeSpan CalculateCooldown(double soundDuration) {
+            return TimeSpan.FromSeconds(soundDuration * MySettings.Instance.PlaysoundsDurationCooldownMultiplier);
         }
         #endregion
     }

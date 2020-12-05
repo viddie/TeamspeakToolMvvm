@@ -44,6 +44,15 @@ namespace TeamspeakToolMvvm.Logic.Misc {
             return earliestCall >= DateTime.Now;
         }
 
+        public static void ResetCooldown(string uid, string command) {
+            SetCooldown(uid, command, DateTime.Now);
+        }
+        public static void ResetCooldowns(string uid) {
+            if (Instance.Settings.CooldownEarliestPossibleCalls.ContainsKey(uid)) {
+                Instance.Settings.CooldownEarliestPossibleCalls.Remove(uid);
+            }
+        }
+
 
         public static string FormatCooldownTime(TimeSpan ts) {
             return Utils.FormatTimeSpanShort(ts);

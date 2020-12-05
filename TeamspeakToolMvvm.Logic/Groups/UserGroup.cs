@@ -15,10 +15,12 @@ namespace TeamspeakToolMvvm.Logic.Groups {
         public override bool IsDefault { get; set; } = true;
         public override Group InheritGroup { get; set; } = null;
         public override Dictionary<Type, bool> CommandAccesses { get; set; } = new Dictionary<Type, bool>() {
+            [typeof(AoeCommand)] = true,
             [typeof(BalanceCommand)] = true,
             [typeof(CoinFlipCommand)] = true,
             [typeof(DailyCommand)] = true,
             [typeof(HelpCommand)] = true,
+            [typeof(PlaysoundsCommand)] = true,
             [typeof(ReplayCommand)] = true,
             [typeof(RollCommand)] = true,
             [typeof(RouletteCommand)] = true,

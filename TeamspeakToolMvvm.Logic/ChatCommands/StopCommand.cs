@@ -31,7 +31,7 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
         }
 
         public override void HandleCommand(NotifyTextMessageEvent evt, string command, List<string> parameters, Action<string> messageCallback) {
-            messageCallback.Invoke(ColorCoder.Error("Plugin instance was killed!"));
+            messageCallback.Invoke(ColorCoder.ErrorBright("Plugin instance was killed!"));
             Messenger.Default.Send(new StopApplicationMessage());
         }
     }

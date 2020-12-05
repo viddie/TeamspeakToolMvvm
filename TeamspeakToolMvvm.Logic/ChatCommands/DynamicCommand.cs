@@ -74,7 +74,7 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
         public override void HandleCommand(NotifyTextMessageEvent evt, string command, List<string> parameters, Action<string> messageCallback) {
             if (command != CommandPrefix) {
                 if (!Settings.DynamicCommands.ContainsKey(command.ToLower())) {
-                    messageCallback.Invoke(ColorCoder.Error($"The command {command} was not found in the dynamic commands list (should never happen)"));
+                    messageCallback.Invoke(ColorCoder.ErrorBright($"The command {command} was not found in the dynamic commands list (should never happen)"));
                 }
 
                 string parametersJoined = string.Join(" ", parameters);
@@ -100,7 +100,7 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
 
             if (action == "add") {
                 if (Settings.DynamicCommands.ContainsKey(commandName)) {
-                    messageCallback.Invoke(ColorCoder.Error($"The command {ColorCoder.Bold($"'{commandName}'")} already exists."));
+                    messageCallback.Invoke(ColorCoder.ErrorBright($"The command {ColorCoder.Bold($"'{commandName}'")} already exists."));
                     return;
                 }
 
@@ -110,7 +110,7 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
 
             } else if (action == "remove") {
                 if (!Settings.DynamicCommands.ContainsKey(commandName)) {
-                    messageCallback.Invoke(ColorCoder.Error($"The command {ColorCoder.Bold($"'{commandName}'")} does not exists."));
+                    messageCallback.Invoke(ColorCoder.ErrorBright($"The command {ColorCoder.Bold($"'{commandName}'")} does not exists."));
                     return;
                 }
 

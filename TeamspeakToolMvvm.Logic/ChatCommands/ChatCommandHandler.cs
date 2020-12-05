@@ -36,6 +36,8 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
             new ScrapeCommand(),
             new ReplayCommand(),
             new PlaysoundsCommand(),
+            new AoeCommand(),
+            new ResetCooldown(),
         };
 
 
@@ -44,7 +46,7 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
             Settings = Parent.Settings;
         }
 
-        public void HandleTextMessage(NotifyTextMessageEvent evt) {
+        public void HandleTextMessage(NotifyTextMessageEvent evt, Action<string> messageCallback) {
             if (!Settings.ChatCommandsEnabled || string.IsNullOrEmpty(evt.Message) || !evt.Message.StartsWith(Settings.ChatCommandPrefix)) return;
 
             Parent.LogMessage($"{evt.InvokerName} requested command: \"{evt.Message}\"");
@@ -56,56 +58,46 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
 
             evt.Message = evt.Message.Substring(Settings.ChatCommandPrefix.Length);
 
-
-            Action<string> sendMessageCallback = null;
-            if (evt.TargetMode == MessageMode.Private) {
-                sendMessageCallback = (s) => Parent.Client.SendPrivateMessage(s, evt.InvokerId);
-            } else if (evt.TargetMode == MessageMode.Channel) {
-                sendMessageCallback = Parent.Client.SendChannelMessage;
-            } else if (evt.TargetMode == MessageMode.Server) {
-                sendMessageCallback = Parent.Client.SendServerMessage;
-            }
-
-
             bool hasAdmin = Settings.AdminUniqueIds.Contains(evt.InvokerUniqueId);
             if (Parent.RateLimiter.CheckRateLimit("chat_command", evt.InvokerUniqueId, hasAdmin) == false) {
-                sendMessageCallback.Invoke(ColorCoder.Error("Slow down a little, you are sending too many commands!"));
+                messageCallback.Invoke(ColorCoder.ErrorBright("Slow down a little, you are sending too many commands!"));
                 return;
             }
 
             string[] messageSplit = evt.Message.Split(new char[] { ' ' });
             string command = messageSplit[0].ToLower();
             List<string> parameters = messageSplit.Skip(1).ToList();
+            parameters = ParseParameterEscapes(parameters);
 
             ChatCommand commandToExecute = null;
             try {
                 commandToExecute = GetCommandForMessage(command, parameters, evt.InvokerUniqueId);
             } catch (ChatCommandNotFoundException) {
-                sendMessageCallback.Invoke(ColorCoder.Error("Command was not found"));
+                messageCallback.Invoke(ColorCoder.ErrorBright("Command was not found"));
                 return;
             } catch (ChatCommandInvalidSyntaxException ex) {
-                sendMessageCallback.Invoke(ColorCoder.Error($"Invalid syntax. Usage of command:\n{Settings.ChatCommandPrefix}{ex.Message}"));
+                messageCallback.Invoke(ColorCoder.ErrorBright($"Invalid syntax. Usage of command:\n{Settings.ChatCommandPrefix}{ex.Message}"));
                 return;
             } catch (NoPermissionException) {
-                sendMessageCallback.Invoke(ColorCoder.Error($"You don't have access to this command, {ColorCoder.Username(evt.InvokerName)}"));
+                messageCallback.Invoke(ColorCoder.ErrorBright($"You don't have access to this command, {ColorCoder.Username(evt.InvokerName)}"));
                 return;
             } catch (CommandParameterInvalidFormatException ex) {
-                sendMessageCallback.Invoke(ColorCoder.Error($"The {ex.GetParameterPosition()} parameter's format was invalid ({ex.ParameterName} = '{ex.ParameterValue}'). It has to be {ColorCoder.Bold(ex.GetNeededType())}!\nUsage: {Settings.ChatCommandPrefix}{ex.UsageHelp}"));
+                messageCallback.Invoke(ColorCoder.ErrorBright($"The {ex.GetParameterPosition()} parameter's format was invalid ({ex.ParameterName} = '{ex.ParameterValue}'). It has to be {ColorCoder.Bold(ex.GetNeededType())}!\nUsage: {Settings.ChatCommandPrefix}{ex.UsageHelp}"));
                 return;
             }
 
             try {
-                commandToExecute.HandleCommand(evt, command, parameters, sendMessageCallback);
+                commandToExecute.HandleCommand(evt, command, parameters, messageCallback);
 
             } catch (MultipleTargetsFoundException ex) {
                 string joined = string.Join(", ", ex.AllFoundTargets.Select(client => ColorCoder.Bold($"'{client.Nickname}'")));
-                sendMessageCallback.Invoke(ColorCoder.Error($"Too many targets were found with {ColorCoder.Bold($"'{ex.Message}'")} in their name ({joined})"));
+                messageCallback.Invoke(ColorCoder.ErrorBright($"Too many targets were found with {ColorCoder.Bold($"'{ex.Message}'")} in their name ({joined})"));
 
             } catch (CooldownNotExpiredException ex) {
-                sendMessageCallback.Invoke(ColorCoder.Error($"That command is still on cooldown. ({ColorCoder.Bold($"{CooldownManager.FormatCooldownTime(ex.Duration)}")} cooldown)"));
+                messageCallback.Invoke(ColorCoder.ErrorBright($"That command is still on cooldown. ({ColorCoder.Bold($"{CooldownManager.FormatCooldownTime(ex.Duration)}")} cooldown)"));
 
             } catch (NoTargetsFoundException ex) {
-                sendMessageCallback.Invoke(ColorCoder.Error($"No targets were found with {ColorCoder.Bold($"'{ex.Message}'")} in their name..."));
+                messageCallback.Invoke(ColorCoder.ErrorBright($"No targets were found with {ColorCoder.Bold($"'{ex.Message}'")} in their name..."));
 
             } catch (Exception ex) {
                 Parent.LogMessage($"Encountered exception in command '{commandToExecute.GetType().Name}': {ex}");
@@ -139,7 +131,39 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
             throw new ChatCommandNotFoundException();
         }
 
+        public static List<string> ParseParameterEscapes(List<string> parameters) {
+            List<string> toRet = new List<string>();
 
+            bool isEscaping = false;
+            string joinedParameter = "";
+            foreach (string currentParameter in parameters) {
+                if (currentParameter.StartsWith("\"")) {
+                    isEscaping = true;
+                    joinedParameter = "";
+                }
+
+                if (isEscaping) {
+                    if (joinedParameter == "")
+                        joinedParameter = currentParameter.Substring(1);
+                    else
+                        joinedParameter = string.Join(" ", joinedParameter, currentParameter);
+
+                    if (currentParameter.EndsWith("\"")) {
+                        isEscaping = false;
+                        joinedParameter = joinedParameter.Substring(0, joinedParameter.Length - 1);
+                        toRet.Add(joinedParameter);
+                    }
+                } else {
+                    toRet.Add(currentParameter);
+                }
+            }
+
+            if (isEscaping) {
+                throw new Exception("Still escaping!");
+            }
+
+            return toRet;
+        }
         /*
          Python code to escape the character (") in parameters:
 

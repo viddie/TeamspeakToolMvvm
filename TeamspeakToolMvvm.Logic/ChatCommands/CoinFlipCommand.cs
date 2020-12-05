@@ -19,7 +19,7 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
         public override bool IsValidCommandSyntax(string command, List<string> parameters) {
             if (parameters.Count > 1) return false;
 
-            if (parameters.Count == 1 && !int.TryParse(parameters[0], out int RollCount)) {
+            if (parameters.Count == 1 && !int.TryParse(parameters[0], out RollCount)) {
                 throw new CommandParameterInvalidFormatException(1, parameters[0], "amount_of_coins", typeof(int), GetUsageSyntax(command, parameters));
             }
 
@@ -79,8 +79,8 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
                 messageCallback.Invoke($"{ColorCoder.Username(evt.InvokerName)} flipped {ColorCoder.Bold(""+ RollCount)} coins... they showed {ColorCoder.Bold($"Heads {rolledHeads}")} and {ColorCoder.Bold($"Tails {rolledTails}")} times");
             }
 
-            Settings.StatisticCoinflipHeads += rolledHeads;
-            Settings.StatisticCoinflipTails += rolledTails;
+            Parent.StatSettings.CoinflipHeads += rolledHeads;
+            Parent.StatSettings.CoinflipTails += rolledTails;
         }
     }
 }
