@@ -67,6 +67,8 @@ namespace TeamspeakToolMvvm.Logic.ViewModels
                 new StringSetting("Output Audio Device", "Use the command '!playsounds list-devices' to find your desired audio device", nameof(SettingsInstance.PlaysoundsSoundDevice)),
                 new BoundedIntSetting("YouTube Max Duration", null, nameof(SettingsInstance.PlaysoundsYoutubeMaxVideoDurationSeconds)) { Unit = "Seconds", Min = 0 },
                 new BoundedDoubleSetting("YouTube Max File Size", null, nameof(SettingsInstance.PlaysoundsYoutubeMaxVideoSizeMb)) { Unit = "MB", Min = 0 },
+                new BoundedDoubleSetting("Youtube Price Coefficient a", "basePrice = a*duration^2 + b*duration", nameof(SettingsInstance.PlaysoundsYoutubePriceCoefficientA)) { },
+                new BoundedDoubleSetting("Youtube Price Coefficient b", "basePrice = a*duration^2 + b*duration", nameof(SettingsInstance.PlaysoundsYoutubePriceCoefficientB)) { },
                 new BoundedIntSetting("Sounds Per Page", "To let your users navigate all available sounds without flooding the chat, a pagination is built into the system. This value decides how many sounds should be displayed per page in the pagination", nameof(SettingsInstance.PlaysoundsSoundsPerPage)) { Unit = "Sounds/Page", Min = 1 },
                 new BoundedDoubleSetting("Cooldown Duration Multiplier", "The cooldown per playsound used will be set to the duration of the playsound in seconds multiplied by this value", nameof(SettingsInstance.PlaysoundsDurationCooldownMultiplier)) { Unit = "x", Min = 0 },
 

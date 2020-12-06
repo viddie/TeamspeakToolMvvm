@@ -79,6 +79,7 @@ namespace TeamspeakToolMvvm.Logic.Config
         #region Playsounds
         public bool PlaysoundsEnabled { get; set; } = true;
         public string PlaysoundsSoundDevice { get; set; } = null;
+        public string PlaysoundsYoutubeFolder { get; set; } = null;
         public int PlaysoundsYoutubeMaxVideoDurationSeconds { get; set; } = 60 * 60 * 1;
         public double PlaysoundsYoutubeMaxVideoSizeMb { get; set; } = 50.0;
         public int PlaysoundsSoundsPerPage { get; set; } = 15;
@@ -101,6 +102,9 @@ namespace TeamspeakToolMvvm.Logic.Config
         };
         public List<Playsound> PlaysoundsSavedSounds { get; set; } = new List<Playsound>();
         public double PlaysoundsDurationCooldownMultiplier { get; set; } = 3;
+        public double PlaysoundsYoutubePriceCoefficientA { get; set; } = 0.00085;
+        public double PlaysoundsYoutubePriceCoefficientB { get; set; } = 0.41;
+        public bool PlaysoundsYoutubeOnePointEvent { get; set; } = false;
         #endregion
 
 

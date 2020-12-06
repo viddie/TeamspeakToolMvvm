@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TeamspeakToolMvvm.Logic.Config;
 
 namespace TeamspeakToolMvvm.Logic.Misc {
     public static class ColorCoder {
@@ -47,7 +48,8 @@ namespace TeamspeakToolMvvm.Logic.Misc {
         public static string Bold(object text) {
             return $"[b]{text}[/b]";
         }
-        public static string Currency(object text, string unit) {
+        public static string Currency(object text, string unit=null) {
+            unit = unit ?? MySettings.Instance.EcoPointUnitName;
             return $"[b]{text} {unit}[/b]";
         }
 

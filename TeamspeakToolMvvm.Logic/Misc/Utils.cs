@@ -22,6 +22,16 @@ namespace TeamspeakToolMvvm.Logic.Misc
 
             return Path.Combine(baseFolder, fileName);
         }
+        public static string GetProjectFolderPath(string folderName) {
+            string baseFolder = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+
+            string folder = Path.Combine(baseFolder, folderName);
+            if (!Directory.Exists(folder)) {
+                Directory.CreateDirectory(folder);
+            }
+
+            return folder;
+        }
 
 
         public static string FormatTimeSpanShort(TimeSpan ts) {
@@ -31,6 +41,29 @@ namespace TeamspeakToolMvvm.Logic.Misc
             }
 
             return $"{(int)ts.TotalHours:00}:{ts.Minutes:00}:{seconds:00}";
+        }
+
+        public static string RemoveTag(string baseString, string tag) {
+            string openTag = $"[{tag}]";
+            string closeTag = $"[/{tag}]";
+
+            return baseString.Substring(openTag.Length, baseString.Length - (closeTag.Length + openTag.Length));
+        }
+
+        public static string FormatBytes(long bytes) {
+            if (bytes >= 1073741824) {
+                return $"{bytes / 1073741824:0.##} GB";
+            } else if (bytes >= 1048576) {
+                return $"{bytes / 1048576:0.##} MB";
+            } else if (bytes >= 1024) {
+                return $"{bytes / 1024:0.##} KB";
+            } else if (bytes > 1) {
+                return $"{bytes} bytes";
+            } else if (bytes == 1) {
+                return $"1 byte";
+            } else {
+                return $"0 bytes";
+            }
         }
     }
 }

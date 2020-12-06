@@ -46,8 +46,8 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
             Settings = Parent.Settings;
         }
 
-        public void HandleTextMessage(NotifyTextMessageEvent evt, Action<string> messageCallback) {
-            if (!Settings.ChatCommandsEnabled || string.IsNullOrEmpty(evt.Message) || !evt.Message.StartsWith(Settings.ChatCommandPrefix)) return;
+        public bool HandleTextMessage(NotifyTextMessageEvent evt, Action<string> messageCallback) {
+            if (!Settings.ChatCommandsEnabled || string.IsNullOrEmpty(evt.Message) || !evt.Message.StartsWith(Settings.ChatCommandPrefix)) return false;
 
             Parent.LogMessage($"{evt.InvokerName} requested command: \"{evt.Message}\"");
 
@@ -61,10 +61,10 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
             bool hasAdmin = Settings.AdminUniqueIds.Contains(evt.InvokerUniqueId);
             if (Parent.RateLimiter.CheckRateLimit("chat_command", evt.InvokerUniqueId, hasAdmin) == false) {
                 messageCallback.Invoke(ColorCoder.ErrorBright("Slow down a little, you are sending too many commands!"));
-                return;
+                return true;
             }
 
-            string[] messageSplit = evt.Message.Split(new char[] { ' ' });
+            string[] messageSplit = evt.Message.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
             string command = messageSplit[0].ToLower();
             List<string> parameters = messageSplit.Skip(1).ToList();
             parameters = ParseParameterEscapes(parameters);
@@ -74,16 +74,16 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
                 commandToExecute = GetCommandForMessage(command, parameters, evt.InvokerUniqueId);
             } catch (ChatCommandNotFoundException) {
                 messageCallback.Invoke(ColorCoder.ErrorBright("Command was not found"));
-                return;
+                return true;
             } catch (ChatCommandInvalidSyntaxException ex) {
                 messageCallback.Invoke(ColorCoder.ErrorBright($"Invalid syntax. Usage of command:\n{Settings.ChatCommandPrefix}{ex.Message}"));
-                return;
+                return true;
             } catch (NoPermissionException) {
                 messageCallback.Invoke(ColorCoder.ErrorBright($"You don't have access to this command, {ColorCoder.Username(evt.InvokerName)}"));
-                return;
+                return true;
             } catch (CommandParameterInvalidFormatException ex) {
                 messageCallback.Invoke(ColorCoder.ErrorBright($"The {ex.GetParameterPosition()} parameter's format was invalid ({ex.ParameterName} = '{ex.ParameterValue}'). It has to be {ColorCoder.Bold(ex.GetNeededType())}!\nUsage: {Settings.ChatCommandPrefix}{ex.UsageHelp}"));
-                return;
+                return true;
             }
 
             try {
@@ -102,6 +102,8 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
             } catch (Exception ex) {
                 Parent.LogMessage($"Encountered exception in command '{commandToExecute.GetType().Name}': {ex}");
             }
+
+            return true;
         }
 
         public ChatCommand GetCommandForMessage(string command, List<string> parameters, string uniqueId) { //command param1 param2 param3

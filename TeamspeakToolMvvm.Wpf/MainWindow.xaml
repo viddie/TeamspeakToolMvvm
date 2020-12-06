@@ -55,6 +55,8 @@
                 <ColumnDefinition Width="30" />
                 <ColumnDefinition Width="100" />
                 <ColumnDefinition Width="60" />
+                <ColumnDefinition Width="100" />
+                <ColumnDefinition Width="100" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
@@ -72,6 +74,12 @@
 
             <Label Grid.Row="1" Grid.Column="2" Content="Last Roulette:" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" />
             <Label Grid.Row="1" Grid.Column="3" Grid.ColumnSpan="3" Content="{Binding LastRouletteResult}" HorizontalContentAlignment="Left" VerticalContentAlignment="Center" />
+
+            <Label Grid.Row="0" Grid.Column="6" Content="YT 1-point Event:" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" />
+            <controls:IconLabel Grid.Row="0" Grid.Column="7" Icon="{Binding Settings.PlaysoundsYoutubeOnePointEvent, Converter={StaticResource BooleanToIconConverter}}" Margin="5,0,0,0" HorizontalContentAlignment="Left" VerticalContentAlignment="Center" />
+
+            <Label Grid.Row="1" Grid.Column="6" Content="YT Folder Size:" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" />
+            <Label Grid.Row="1" Grid.Column="7" Content="{Binding YoutubePlaysoundsFileSize}" HorizontalContentAlignment="Left" VerticalContentAlignment="Center" />
         </Grid>
 
         <Grid Grid.Row="2">

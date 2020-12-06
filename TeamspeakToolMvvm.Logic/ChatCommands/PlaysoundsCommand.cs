@@ -55,7 +55,10 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
         };
 
         public static List<Process> AllStartedSoundProcesses = new List<Process>();
+        public static double LoadingPercentDone { get; set; } = -1;
 
+        public static object YoutubeDownloadLock { get; set; } = new object();
+        public static bool IsLoadingYoutubeAudio { get; set; } = false;
 
 
 
@@ -77,9 +80,11 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
         public string SelectedModifier;
         public string SoundSource;
         public bool SourceIsYoutube = false;
-        public uint YoutubeStartTime = uint.MaxValue;
-        public uint YoutubeEndTime = uint.MaxValue;
+        public uint YoutubeStartTime = 0;
+        public uint YoutubeEndTime = (uint)int.MaxValue - 1;
         public Dictionary<string, double> ManualModifiers;
+
+        public uint PriceLookupDuration;
 
         public override bool IsValidCommandSyntax(string command, List<string> parameters) {
             if (parameters.Count == 0) {
@@ -153,6 +158,7 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
             }
 
 
+            if (parameters.Count == 2 && parameters[0] == "price" && uint.TryParse(parameters[1], out PriceLookupDuration)) return true;
 
 
             if (parameters[0].StartsWith("-")) { //Remove mods from parameters
@@ -189,23 +195,26 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
 
 
             if (parameters.Count >= 1 && SourceIsYoutube) { //Youtube: start and end time
-                if (parameters.Count > 2) return false;
+                if (parameters.Count > 4) return false;
                 if (parameters.Count >= 1) {
                     try {
                         YoutubeStartTime = GetYoutubeTimeInSeconds(parameters[0]);
+                        parameters = parameters.Skip(1).ToList();
                     } catch (Exception) {
-                        throw new CommandParameterInvalidFormatException(SelectedModifier == null ? 2 : 3, parameters[0], "startTime", typeof(uint), GetUsageSyntax(command, new List<string>()));
+                        //throw new CommandParameterInvalidFormatException(SelectedModifier == null ? 2 : 3, parameters[0], "startTime", typeof(uint), GetUsageSyntax(command, new List<string>()));
                     }
                 }
-                if (parameters.Count == 2) {
+                if (parameters.Count >= 1) {
                     try {
-                        YoutubeEndTime = GetYoutubeTimeInSeconds(parameters[1]);
+                        YoutubeEndTime = GetYoutubeTimeInSeconds(parameters[0]);
+                        parameters = parameters.Skip(1).ToList();
                     } catch (Exception) {
-                        throw new CommandParameterInvalidFormatException(SelectedModifier == null ? 3 : 4, parameters[1], "endTime", typeof(uint), GetUsageSyntax(command, new List<string>()));
+                        //throw new CommandParameterInvalidFormatException(SelectedModifier == null ? 3 : 4, parameters[1], "endTime", typeof(uint), GetUsageSyntax(command, new List<string>()));
                     }
                 }
+            }
 
-            } else if(parameters.Count >= 1) {
+            if (parameters.Count >= 1) {
                 ManualModifiers = ParseModifierParameters(parameters);
             }
 
@@ -293,15 +302,18 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
             }
 
 
+            if (parameters.Count == 2 && parameters[0] == "price") {
+                int price = CalculateYoutubePlaysoundCost(PriceLookupDuration);
+                messageCallback.Invoke($"Cost for {ColorCoder.Bold($"'{PriceLookupDuration}'")} seconds of a youtube video: {ColorCoder.Currency(price)}");
+                return;
+            }
+
+
 
             // +----------------------+
             // |      Pagination      |
             // +----------------------+
-            // 66 items a 10 items per page = 7 pages (10, 10, 10, 10, 10, 10, 6)
-            // page = 3
-            // skip = 30 values
-            // take = 
-            if (HasRequestedPagination) {
+                if (HasRequestedPagination) {
                 int entriesPerPage = Settings.PlaysoundsSoundsPerPage;
                 int maxPage = (int) Math.Ceiling((double) Settings.PlaysoundsSavedSounds.Count / entriesPerPage);
 
@@ -342,12 +354,6 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
             }
 
             CooldownManager.ThrowIfCooldown(evt.InvokerUniqueId, "command:playsounds");
-
-
-            // +----------------------+
-            // |   Youtube fetching   |
-            // +----------------------+
-
 
 
             // +-------------------------+
@@ -396,29 +402,95 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
             double priceFactor = GetPriceFactorForModifiers(actualModifiers);
 
 
-            Playsound sound;
+            int basePrice;
+            string filePath;
+            double baseDuration;
+            string playingSoundStr;
 
-            if (SoundSource == "random") {
-                Random r = new Random();
-                sound = Settings.PlaysoundsSavedSounds.FindAll(ps => Math.Ceiling(ps.BasePrice * priceFactor) <= EconomyManager.GetBalanceForUser(evt.InvokerUniqueId)).OrderBy(ps => r.Next()).First();
-            } else {
-                List<Playsound> sounds = Settings.PlaysoundsSavedSounds.FindAll(ps => ps.Name.ToLower().Contains(SoundSource.ToLower()));
-                if (sounds.Count == 0) {
-                    messageCallback.Invoke(ColorCoder.Error($"A playsound with the name {ColorCoder.Bold($"'{SoundSource}'")} wasn't found!"));
-                    return;
-
-                } else if (sounds.Count > 1) {
-                    string soundsJoined = string.Join(", ", sounds.Select(ps => ColorCoder.Bold($"'{ps.Name}'")));
-                    messageCallback.Invoke(ColorCoder.Error($"Multiple sounds with {ColorCoder.Bold($"'{SoundSource}'")} in their name were found: ({soundsJoined})"));
-                    return;
-
-                } else {
-                    sound = sounds[0];
+            if (SourceIsYoutube) {
+                // +----------------------+
+                // |   Youtube fetching   |
+                // +----------------------+
+                if (SoundSource.ToLower().StartsWith("[url]")) {
+                    SoundSource = Utils.RemoveTag(SoundSource, "url");
                 }
+                string title = "";
+                if (AudioHelper.IsYouTubeVideoUrl(SoundSource)) {
+                    lock (YoutubeDownloadLock) {
+                        if (IsLoadingYoutubeAudio) {
+                            string loadingStr = LoadingPercentDone == -1 ? "download not yet started" : $"{LoadingPercentDone:0.##}%";
+                            messageCallback.Invoke(ColorCoder.ErrorBright($"Chill, I'm still loading another clip... ({loadingStr})"));
+                            return;
+                        }
+                        IsLoadingYoutubeAudio = true;
+                    }
+
+                    string videoId = SoundSource.Substring(SoundSource.IndexOf($"v=") + 2, 11);
+                    try {
+                        (filePath, title) = AudioHelper.LoadYoutubeVideo(videoId, (int)YoutubeStartTime, (int)(YoutubeEndTime - YoutubeStartTime) + 1, new ProgressSaver());
+                        Parent.UpdateYoutubeFolderSize();
+                    } catch (ArgumentException ex) {
+                        messageCallback.Invoke(ColorCoder.ErrorBright($"Error with youtube video: {ex.Message}"));
+                        lock (YoutubeDownloadLock) {
+                            IsLoadingYoutubeAudio = false;
+                            LoadingPercentDone = -1;
+                        }
+                        return;
+                    }
+
+                    lock (YoutubeDownloadLock) {
+                        IsLoadingYoutubeAudio = false;
+                        LoadingPercentDone = -1;
+                    }
+                } else {
+                    messageCallback.Invoke(ColorCoder.ErrorBright($"The URL is not a youtube link..."));
+                    return;
+                }
+
+                baseDuration = AudioHelper.GetAudioDurationInSeconds(filePath);
+                if (double.IsNaN(baseDuration)) {
+                    messageCallback.Invoke(ColorCoder.ErrorBright($"Couldn't get audio duration from file '{filePath}'"));
+                    return;
+                }
+
+                basePrice = CalculateYoutubePlaysoundCost(baseDuration);
+                if (baseDuration <= 60 && Settings.PlaysoundsYoutubeOnePointEvent) {
+                    basePrice = 1;
+                }
+
+                playingSoundStr = ColorCoder.SuccessDim($" Playing YouTube clip {ColorCoder.Bold($"'{title}'")} ({baseDuration:0} seconds).");
+
+            } else {
+                Playsound sound;
+                if (SoundSource == "random") {
+                    Random r = new Random();
+                    sound = Settings.PlaysoundsSavedSounds.FindAll(ps => Math.Ceiling(ps.BasePrice * priceFactor) <= EconomyManager.GetBalanceForUser(evt.InvokerUniqueId)).OrderBy(ps => r.Next()).First();
+                } else {
+                    List<Playsound> sounds = Settings.PlaysoundsSavedSounds.FindAll(ps => ps.Name.ToLower().Contains(SoundSource.ToLower()));
+                    if (sounds.Count == 0) {
+                        messageCallback.Invoke(ColorCoder.Error($"A playsound with the name {ColorCoder.Bold($"'{SoundSource}'")} wasn't found!"));
+                        return;
+
+                    } else if (sounds.Count > 1) {
+                        string soundsJoined = string.Join(", ", sounds.Select(ps => ColorCoder.Bold($"'{ps.Name}'")));
+                        messageCallback.Invoke(ColorCoder.Error($"Multiple sounds with {ColorCoder.Bold($"'{SoundSource}'")} in their name were found: ({soundsJoined})"));
+                        return;
+
+                    } else {
+                        sound = sounds[0];
+                    }
+                }
+
+                basePrice = sound.BasePrice;
+                filePath = Utils.GetProjectFilePath($"{SoundsFolder}\\{sound.FileName}");
+                baseDuration = AudioHelper.GetAudioDurationInSeconds(filePath);
+                playingSoundStr = ColorCoder.SuccessDim($" Playing sound {ColorCoder.Bold($"'{sound.Name}'")}.");
             }
 
+            
 
-            int modifiedPrice = Math.Max(1, (int)Math.Round(sound.BasePrice * priceFactor));
+            int modifiedPrice = Math.Max(1, (int)Math.Round(basePrice * priceFactor));
+            double modifiedDuration = baseDuration / speed;
 
             int balanceAfter = EconomyManager.GetUserBalanceAfterPaying(evt.InvokerUniqueId, modifiedPrice);
             if (balanceAfter < 0) {
@@ -426,23 +498,19 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
                 return;
             }
 
-
-
-            string filePath = Utils.GetProjectFilePath($"{SoundsFolder}\\{sound.FileName}");
-            double duration = AudioHelper.GetAudioDurationInSeconds(filePath) / speed;
-            CooldownManager.SetCooldown(evt.InvokerUniqueId, "command:playsounds", CalculateCooldown(duration));
+            CooldownManager.SetCooldown(evt.InvokerUniqueId, "command:playsounds", CalculateCooldown(modifiedDuration));
 
             EconomyManager.ChangeBalanceForUser(evt.InvokerUniqueId, -modifiedPrice);
 
             string usernameStr = ColorCoder.Username(evt.InvokerName);
-            string playingSoundStr = ColorCoder.SuccessDim($" Playing sound {ColorCoder.Bold($"'{sound.Name}'")}.");
             string priceAdditionStr = priceFactor == 1 ? "" : $" x{priceFactor:0.##} = -{modifiedPrice}";
-            string balanceStr = $"Your balance: {EconomyManager.GetBalanceForUser(evt.InvokerUniqueId)} {Settings.EcoPointUnitName} {ColorCoder.ErrorBright($"(-{sound.BasePrice}{priceAdditionStr})")}";
+            string balanceStr = $"Your balance: {EconomyManager.GetBalanceForUser(evt.InvokerUniqueId)} {Settings.EcoPointUnitName} {ColorCoder.ErrorBright($"(-{basePrice}{priceAdditionStr})")}";
             messageCallback.Invoke($"{usernameStr} {playingSoundStr} {balanceStr}");
 
             Process audioProcess = AudioHelper.PlayAudio(filePath, volume, speed, pitch, audioDevice:Settings.PlaysoundsSoundDevice);
             AllStartedSoundProcesses.Add(audioProcess);
         }
+
 
         private bool CheckValidModifiers(Dictionary<string, double> manualModifiers, Action<string> messageCallback) {
             if (manualModifiers == null) {
@@ -539,6 +607,20 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
         public static TimeSpan CalculateCooldown(double soundDuration) {
             return TimeSpan.FromSeconds(soundDuration * MySettings.Instance.PlaysoundsDurationCooldownMultiplier);
         }
+
+        public static int CalculateYoutubePlaysoundCost(double duration) {
+            //0.00085x^{2}\ +\ 0.41x
+            double coefficientA = MySettings.Instance.PlaysoundsYoutubePriceCoefficientA;
+            double coefficientB = MySettings.Instance.PlaysoundsYoutubePriceCoefficientB;
+            double cost = (coefficientA * (duration * duration)) + (coefficientB * duration);
+            return Math.Max(1, (int)Math.Round(cost));
+        }
         #endregion
+    }
+
+    public class ProgressSaver : IProgress<double> {
+        public void Report(double value) {
+            PlaysoundsCommand.LoadingPercentDone = value;
+        }
     }
 }
