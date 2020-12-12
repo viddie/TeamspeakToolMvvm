@@ -38,6 +38,7 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
             new PlaysoundsCommand(),
             new AoeCommand(),
             new ResetCooldown(),
+            new ChooseCommand(),
         };
 
 

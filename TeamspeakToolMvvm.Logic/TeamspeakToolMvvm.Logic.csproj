@@ -115,6 +115,7 @@
     <Compile Include="ChatCommands\BalanceCommand.cs" />
     <Compile Include="ChatCommands\ChatCommand.cs" />
     <Compile Include="ChatCommands\ChatCommandHandler.cs" />
+    <Compile Include="ChatCommands\ChooseCommand.cs" />
     <Compile Include="ChatCommands\CoinFlipCommand.cs" />
     <Compile Include="ChatCommands\DailyCommand.cs" />
     <Compile Include="ChatCommands\DynamicCommand.cs" />

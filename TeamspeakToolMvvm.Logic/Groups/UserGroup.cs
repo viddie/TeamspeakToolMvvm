@@ -17,6 +17,7 @@ namespace TeamspeakToolMvvm.Logic.Groups {
         public override Dictionary<Type, bool> CommandAccesses { get; set; } = new Dictionary<Type, bool>() {
             [typeof(AoeCommand)] = true,
             [typeof(BalanceCommand)] = true,
+            [typeof(ChooseCommand)] = true,
             [typeof(CoinFlipCommand)] = true,
             [typeof(DailyCommand)] = true,
             [typeof(HelpCommand)] = true,
@@ -30,6 +31,7 @@ namespace TeamspeakToolMvvm.Logic.Groups {
             [typeof(TickCommand)] = true,
             [typeof(TimeCommand)] = true,
             [typeof(YouTubeCommand)] = true,
+            
         };
         public override Dictionary<string, bool> SubCommandAccesses { get; set; } = new Dictionary<string, bool>() {
             ["command:commands_list"] = true,
