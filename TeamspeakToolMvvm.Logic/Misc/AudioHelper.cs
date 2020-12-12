@@ -281,24 +281,30 @@ namespace TeamspeakToolMvvm.Logic.Misc {
         }
 
 
-        public static bool IsYouTubeVideoUrl(string url) {
+        public static string IsYouTubeVideoUrl(string url) {
             if (url.ToLower().StartsWith("[url]")) {
                 url = Utils.RemoveTag(url, "url");
             }
 
-            if (!url.Contains("youtube") && url.Contains("youtu.be")) {
-                return false;
+            if (!url.Contains("youtube") && !url.Contains("youtu.be")) {
+                return null;
             }
 
-            url = url.Contains("v=") ? url : $"https://youtube.com/watch?v={url}";
+            if (url.Contains("youtu.be")) {
+                string watchId = url.Substring(url.IndexOf("youtu.be/")+9, 11);
+                url = $"https://youtube.com/watch?v={watchId}";
+            } else {
+                url = url.Contains("v=") ? url : $"https://youtube.com/watch?v={url}";
+            }
 
             try {
                 YoutubeClient youtube = new YoutubeClient();
                 Video video = youtube.Videos.GetAsync(url).Result;
+                return video.Url;
             } catch (Exception) {
-                return false;
+                return null;
             }
-            return true;
+            return null;
         }
     }
     public class ProgressWriter : IProgress<double> {

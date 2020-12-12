@@ -415,7 +415,8 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
                     SoundSource = Utils.RemoveTag(SoundSource, "url");
                 }
                 string title = "";
-                if (AudioHelper.IsYouTubeVideoUrl(SoundSource)) {
+                string youtubeUrl = AudioHelper.IsYouTubeVideoUrl(SoundSource);
+                if (youtubeUrl != null) {
                     lock (YoutubeDownloadLock) {
                         if (IsLoadingYoutubeAudio) {
                             string loadingStr = LoadingPercentDone == -1 ? "download not yet started" : $"{LoadingPercentDone:0.##}%";
@@ -425,7 +426,7 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
                         IsLoadingYoutubeAudio = true;
                     }
 
-                    string videoId = SoundSource.Substring(SoundSource.IndexOf($"v=") + 2, 11);
+                    string videoId = youtubeUrl.Substring(youtubeUrl.IndexOf($"v=") + 2, 11);
                     try {
                         (filePath, title) = AudioHelper.LoadYoutubeVideo(videoId, (int)YoutubeStartTime, (int)(YoutubeEndTime - YoutubeStartTime) + 1, new ProgressSaver());
                         Parent.UpdateYoutubeFolderSize();

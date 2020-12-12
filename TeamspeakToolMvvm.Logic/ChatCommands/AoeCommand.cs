@@ -153,7 +153,7 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
                 playerInfo.Add(matchPlayer);
 
                 if (matchPlayer.SteamId != player.SteamId) {
-                    AoeLeaderboardResponse lb = GetLeaderboardResponse(leaderboardId, matchPlayer.SteamId, 2, true);
+                    AoeLeaderboardResponse lb = GetLeaderboardResponse(leaderboardId, matchPlayer.ProfileId.Value.ToString(), 2, isProfileId:true);
                     if (lb.Leaderboard.Count == 0)
                         playerInfo.Add(null);
                     else
@@ -223,11 +223,13 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
 
 
 
-        public static AoeLeaderboardResponse GetLeaderboardResponse(int leaderId, string name, int count, bool isSteamId = false) {
+        public static AoeLeaderboardResponse GetLeaderboardResponse(int leaderId, string name, int count, bool isSteamId = false, bool isProfileId = false) {
             string profileUrl;
 
             if (isSteamId) {
                 profileUrl = $"https://aoe2.net/api/leaderboard?game=aoe2de&leaderboard_id={leaderId}&steam_id={name}&count={count}";
+            } else if(isProfileId) {
+                profileUrl = $"https://aoe2.net/api/leaderboard?game=aoe2de&leaderboard_id={leaderId}&profile_id={name}&count={count}";
             } else {
                 profileUrl = $"https://aoe2.net/api/leaderboard?game=aoe2de&leaderboard_id={leaderId}&search={name}&count={count}";
             }

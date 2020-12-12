@@ -122,6 +122,7 @@ namespace TeamspeakToolMvvm.Logic.ViewModels {
                 new CommandModel() { DisplayName = "Toggle door", Command = new RelayCommand(ToggleDoorChannel), IconName = "ArrowRight" },
                 new CommandModel() { DisplayName = "Reload Client List", Command = new RelayCommand(ReloadClientList), IconName = "Refresh" },
                 new CommandModel() { DisplayName = "Toggle YT 1-Point Event", Command = new RelayCommand(ToggleYtOnePointEvent), IconName = "None" },
+                new CommandModel() { DisplayName = "Purge YouTube playsounds folder", Command = new RelayCommand(PurgeYouTubePlaysoundsFolder), IconName = "Trash" },
                 new CommandModel() { DisplayName = "Test Command", Command = new RelayCommand(TestCommand), IconName = "Wrench" },
             };
 
@@ -247,7 +248,8 @@ namespace TeamspeakToolMvvm.Logic.ViewModels {
                 totalBytes += new FileInfo(file).Length;
             }
 
-            string addedAddition = LastYoutubeFileSizeBytes == 0 ? "" : $" (+{Misc.Utils.FormatBytes(totalBytes - LastYoutubeFileSizeBytes)})";
+            string plusSign = totalBytes - LastYoutubeFileSizeBytes > 0 ? "+" : "";
+            string addedAddition = LastYoutubeFileSizeBytes == 0 ? "" : $" ({plusSign}{Misc.Utils.FormatBytes(totalBytes - LastYoutubeFileSizeBytes)})";
 
             YoutubePlaysoundsFileSize = $"{Misc.Utils.FormatBytes(totalBytes)}{addedAddition}";
             LastYoutubeFileSizeBytes = totalBytes;
@@ -264,7 +266,7 @@ namespace TeamspeakToolMvvm.Logic.ViewModels {
             List<Client> clients = Client.GetClientsInChannel(myChannelId);
             foreach (Client client in clients) {
                 LogMessage($"  > Poking '{client.Nickname}'");
-                Client.SendCommand($"clientpoke clid={client.Id} msg=Poke\\sTest");
+                Client.SendCommand($"clientpoke clid={client.Id} msg");
             }
         }
 
@@ -299,6 +301,15 @@ namespace TeamspeakToolMvvm.Logic.ViewModels {
             }
 
             Settings.PlaysoundsYoutubeOnePointEvent = !Settings.PlaysoundsYoutubeOnePointEvent;
+        }
+
+        public void PurgeYouTubePlaysoundsFolder() {
+            foreach (string file in Directory.GetFiles(Settings.PlaysoundsYoutubeFolder)) {
+                File.Delete(file);
+            }
+
+            LogMessage($"Purged '{YoutubePlaysoundsFileSize}' of playsound cache data");
+            UpdateYoutubeFolderSize();
         }
         #endregion
 
@@ -353,7 +364,7 @@ namespace TeamspeakToolMvvm.Logic.ViewModels {
 
         #region Client Text Message Handlers
         public void OnImmediateChatReaction(NotifyTextMessageEvent evt, Action<string> messageCallback) {
-            if (Settings.ImmediateYoutubeEnabled && AudioHelper.IsYouTubeVideoUrl(evt.Message)) {
+            if (Settings.ImmediateYoutubeEnabled && AudioHelper.IsYouTubeVideoUrl(evt.Message) != null) {
                 evt.Message = $"!yt {evt.Message}";
                 CommandHandler.HandleTextMessage(evt, messageCallback);
             } else if(Settings.ImmediateGeneralEnabled) {

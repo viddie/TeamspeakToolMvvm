@@ -51,16 +51,22 @@ namespace TeamspeakToolMvvm.Logic.Misc
         }
 
         public static string FormatBytes(long bytes) {
+            string negativeSign = "";
+            if (bytes < 0) {
+                negativeSign = "-";
+                bytes = Math.Abs(bytes);
+            }
+
             if (bytes >= 1073741824) {
-                return $"{bytes / 1073741824:0.##} GB";
+                return $"{negativeSign}{bytes / 1073741824:0.##} GB";
             } else if (bytes >= 1048576) {
-                return $"{bytes / 1048576:0.##} MB";
+                return $"{negativeSign}{bytes / 1048576:0.##} MB";
             } else if (bytes >= 1024) {
-                return $"{bytes / 1024:0.##} KB";
+                return $"{negativeSign}{bytes / 1024:0.##} KB";
             } else if (bytes > 1) {
-                return $"{bytes} bytes";
+                return $"{negativeSign}{bytes} bytes";
             } else if (bytes == 1) {
-                return $"1 byte";
+                return $"{negativeSign}1 byte";
             } else {
                 return $"0 bytes";
             }
