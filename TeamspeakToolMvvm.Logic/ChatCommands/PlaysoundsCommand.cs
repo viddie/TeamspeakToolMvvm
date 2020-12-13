@@ -459,7 +459,7 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
                     basePrice = 1;
                 }
 
-                playingSoundStr = ColorCoder.SuccessDim($" Playing YouTube clip {ColorCoder.Bold($"'{title}'")} ({baseDuration:0} seconds).");
+                playingSoundStr = ColorCoder.SuccessDim($" Playing YouTube clip {ColorCoder.Bold($"'{title}'")} [{TimeSpan.FromSeconds((int)baseDuration)}].");
 
             } else {
                 Playsound sound;
