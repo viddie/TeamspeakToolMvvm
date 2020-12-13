@@ -30,6 +30,7 @@ namespace TeamspeakToolMvvm.Logic.Groups {
             [typeof(TeamsCommand)] = true,
             [typeof(TickCommand)] = true,
             [typeof(TimeCommand)] = true,
+            [typeof(TimedCommand)] = true,
             [typeof(WakemeupCommand)] = true,
             [typeof(YouTubeCommand)] = true,
         };

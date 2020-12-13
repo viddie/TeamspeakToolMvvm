@@ -153,7 +153,7 @@ namespace TeamspeakToolMvvm.Logic.Misc
                     hasTimeUnit = false;
                 } else {
                     if (fromIndex == toIndex) {
-                        throw new TimeStringParseException("This should never occur...");
+                        throw new TimeStringParseException("This should never occur..."){ Input = timeString };
                     }
 
                     if (int.TryParse(timeString.Substring(fromIndex, toIndex - fromIndex - 1), out parsedNum)) {
@@ -166,13 +166,13 @@ namespace TeamspeakToolMvvm.Logic.Misc
                         }
                         hasTimeUnit = true;
                     } else {
-                        throw new TimeStringParseException();
+                        throw new TimeStringParseException("Could not parse a time value"){ Input = timeString };
                     }
                 }
             }
 
             if (!hasTimeUnit) {
-                throw new TimeStringParseException("There was a missing time unit for a number");
+                throw new TimeStringParseException("There was a missing time unit for a time value") { Input = timeString };
             }
 
             int weeks = 0, days = 0, hours = 0, minutes = 0, seconds = 0, milliseconds = 0;

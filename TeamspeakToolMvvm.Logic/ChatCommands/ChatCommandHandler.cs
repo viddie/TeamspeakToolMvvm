@@ -40,6 +40,7 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
             new ResetCooldown(),
             new ChooseCommand(),
             new WakemeupCommand(),
+            new TimedCommand(),
         };
 
 
@@ -72,6 +73,8 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
             parameters = ParseParameterEscapes(parameters);
 
             ChatCommand commandToExecute = null;
+
+            //Handle exceptions that occur during the parsing of the parameters
             try {
                 commandToExecute = GetCommandForMessage(command, parameters, evt.InvokerUniqueId);
             } catch (ChatCommandNotFoundException) {
@@ -86,8 +89,13 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
             } catch (CommandParameterInvalidFormatException ex) {
                 messageCallback.Invoke(ColorCoder.ErrorBright($"The {ex.GetParameterPosition()} parameter's format was invalid ({ex.ParameterName} = '{ex.ParameterValue}'). It has to be {ColorCoder.Bold(ex.GetNeededType())}!\nUsage: {Settings.ChatCommandPrefix}{ex.UsageHelp}"));
                 return true;
+            } catch (TimeStringParseException ex) {
+                messageCallback.Invoke(ColorCoder.ErrorBright($"The provided time value '{ex.Input}' had invalid syntax: {ex.Message}"));
+                return true;
             }
 
+
+            //Handle exceptions that occur during execution of the command
             try {
                 commandToExecute.HandleCommand(evt, command, parameters, messageCallback);
 

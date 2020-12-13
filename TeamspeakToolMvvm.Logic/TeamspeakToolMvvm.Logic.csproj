@@ -132,6 +132,8 @@
     <Compile Include="ChatCommands\TeamsCommand.cs" />
     <Compile Include="ChatCommands\TickCommand.cs" />
     <Compile Include="ChatCommands\TimeCommand.cs" />
+    <Compile Include="ChatCommands\TimedCommand.cs" />
+    <Compile Include="ChatCommands\WakemeupCommand.cs" />
     <Compile Include="ChatCommands\YouTubeCommand.cs" />
     <Compile Include="Config\AoeSettings.cs" />
     <Compile Include="Config\StatisticSettings.cs" />
@@ -190,6 +192,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="ChatCommands\ExampleCommand.txt" />
     <Content Include="ffmpeg.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

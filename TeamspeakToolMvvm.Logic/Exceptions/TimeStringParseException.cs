@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace TeamspeakToolMvvm.Logic.Exceptions {
     public class TimeStringParseException : Exception {
+
+        public string Input { get; set; }
+
         public TimeStringParseException() { }
         public TimeStringParseException(string message) : base(message) { }
         public TimeStringParseException(string message, Exception innerEx) : base(message, innerEx) { }
