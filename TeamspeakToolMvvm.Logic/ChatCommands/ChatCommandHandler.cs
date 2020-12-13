@@ -39,6 +39,7 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
             new AoeCommand(),
             new ResetCooldown(),
             new ChooseCommand(),
+            new WakemeupCommand(),
         };
 
 

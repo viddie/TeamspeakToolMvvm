@@ -468,6 +468,14 @@ namespace TeamspeakToolMvvm.Logic.ChatCommands {
                     sound = Settings.PlaysoundsSavedSounds.FindAll(ps => Math.Ceiling(ps.BasePrice * priceFactor) <= EconomyManager.GetBalanceForUser(evt.InvokerUniqueId)).OrderBy(ps => r.Next()).First();
                 } else {
                     List<Playsound> sounds = Settings.PlaysoundsSavedSounds.FindAll(ps => ps.Name.ToLower().Contains(SoundSource.ToLower()));
+
+                    //Fix for matching the exact sound name
+                    Playsound exactSound = Settings.PlaysoundsSavedSounds.Find(ps => ps.Name == SoundSource);
+                    if (exactSound != null) {
+                        sounds.Clear();
+                        sounds.Add(exactSound);
+                    }
+
                     if (sounds.Count == 0) {
                         messageCallback.Invoke(ColorCoder.Error($"A playsound with the name {ColorCoder.Bold($"'{SoundSource}'")} wasn't found!"));
                         return;

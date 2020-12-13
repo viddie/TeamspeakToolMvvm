@@ -141,6 +141,7 @@
     <Compile Include="Exceptions\CooldownNotExpiredException.cs" />
     <Compile Include="Exceptions\GroupNotFoundException.cs" />
     <Compile Include="Exceptions\NoPermissionException.cs" />
+    <Compile Include="Exceptions\TimeStringParseException.cs" />
     <Compile Include="Groups\AdminGroup.cs" />
     <Compile Include="Groups\BannedGroup.cs" />
     <Compile Include="Groups\Group.cs" />

@@ -30,8 +30,8 @@ namespace TeamspeakToolMvvm.Logic.Groups {
             [typeof(TeamsCommand)] = true,
             [typeof(TickCommand)] = true,
             [typeof(TimeCommand)] = true,
+            [typeof(WakemeupCommand)] = true,
             [typeof(YouTubeCommand)] = true,
-            
         };
         public override Dictionary<string, bool> SubCommandAccesses { get; set; } = new Dictionary<string, bool>() {
             ["command:commands_list"] = true,

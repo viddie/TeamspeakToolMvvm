@@ -266,7 +266,7 @@ namespace TeamspeakToolMvvm.Logic.ViewModels {
             List<Client> clients = Client.GetClientsInChannel(myChannelId);
             foreach (Client client in clients) {
                 LogMessage($"  > Poking '{client.Nickname}'");
-                Client.SendCommand($"clientpoke clid={client.Id} msg");
+                Client.PokeClient(client);
             }
         }
 
@@ -287,6 +287,16 @@ namespace TeamspeakToolMvvm.Logic.ViewModels {
 
         public void TestCommand() {
             LogMessage("Executing test command...");
+
+            TimeSpan sp1 = Misc.Utils.TimeStringToTimeSpan("1f");
+            sp1 = Misc.Utils.TimeStringToTimeSpan("5s");
+            sp1 = Misc.Utils.TimeStringToTimeSpan("10m");
+            sp1 = Misc.Utils.TimeStringToTimeSpan("3h");
+            sp1 = Misc.Utils.TimeStringToTimeSpan("2d");
+            sp1 = Misc.Utils.TimeStringToTimeSpan("10w");
+
+            sp1 = Misc.Utils.TimeStringToTimeSpan("5m49s");
+            sp1 = Misc.Utils.TimeStringToTimeSpan("1w2d3h4m5s6f");
         }
 
         public void ReloadClientList() {
